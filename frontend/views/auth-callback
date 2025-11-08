@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Signing you in…</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-config.js"></script>
+</head>
+<body>
+  <p>Signing you in…</p>
+
+  <script>
+    // Supabase URL hash me access_token bhejta hai; ye handle karega
+    async function run() {
+      try {
+        // Session pick (detectSessionInUrl:true already enabled in your config)
+        const { data: { user }, error } = await window.supabase.auth.getUser();
+        if (error) console.warn(error);
+
+        // (optional) tumhara save function agar available hai:
+        if (user && typeof saveGoogleUserToDatabase === "function") {
+          try { await saveGoogleUserToDatabase(user); } catch(e) {}
+        }
+
+        // ✅ final redirect to dashboard
+        window.location.replace(window.location.origin + "/dashboard");
+        // agar tumhari file /Dashboard/index.html path par hai:
+        // window.location.replace(window.location.origin + "/Dashboard/index.html");
+      } catch (e) {
+        console.error(e);
+        // fallback
+        window.location.replace(window.location.origin + "/login");
+      }
+    }
+    run();
+  </script>
+</body>
+</html>
