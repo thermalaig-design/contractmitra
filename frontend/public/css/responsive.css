@@ -1,0 +1,497 @@
+/* ==================== RESPONSIVE STYLES ==================== */
+/* Mobile First Approach */
+
+/* Base Mobile Styles */
+@media screen and (max-width: 768px) {
+    /* Top Navigation */
+    .top-nav {
+        padding: 12px 16px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+        font-size: 18px;
+    }
+
+    .notification-btn {
+        padding: 8px;
+        font-size: 18px;
+    }
+
+    .user-dropdown {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    /* Sidebar Mobile */
+    .sidebar {
+        position: fixed;
+        left: -250px;
+        top: 60px;
+        width: 250px;
+        height: calc(100vh - 60px);
+        background: white;
+        z-index: 999;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-item {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sidebar-toggle {
+        display: block;
+        position: fixed;
+        top: 72px;
+        left: 16px;
+        z-index: 998;
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
+
+    /* Main Content Mobile */
+    .main-content {
+        margin-top: 60px;
+        margin-left: 0;
+        padding: 16px;
+        min-height: calc(100vh - 60px);
+    }
+
+    .main-content.expanded {
+        margin-left: 0;
+    }
+
+    /* KPI Grid Mobile */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        padding: 16px;
+        text-align: center;
+    }
+
+    .kpi-value {
+        font-size: 24px;
+        margin-bottom: 4px;
+    }
+
+    .kpi-label {
+        font-size: 12px;
+    }
+
+    /* Dashboard Grid Mobile */
+    .dashboard-grid {
+        display: block;
+    }
+
+    .left-column {
+        width: 100%;
+        margin-bottom: 24px;
+    }
+
+    .projects-panel {
+        width: 100%;
+        margin-top: 24px;
+    }
+
+    /* Section Headers Mobile */
+    .section-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 10px 16px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    /* Tables Mobile */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -16px;
+        padding: 0 16px;
+    }
+
+    .responsive-table {
+        min-width: 100%;
+        font-size: 14px;
+    }
+
+    .responsive-table th,
+    .responsive-table td {
+        padding: 10px 8px;
+        white-space: nowrap;
+    }
+
+    .hide-mobile {
+        display: none !important;
+    }
+
+    /* Project List Mobile */
+    .project-item {
+        padding: 12px;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .project-name {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .project-details {
+        font-size: 12px;
+    }
+
+    /* Modals Mobile */
+    .modal-overlay {
+        padding: 16px;
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+
+    .modal {
+        width: 100%;
+        max-width: none;
+        margin: 20px 0;
+        padding: 20px 16px;
+        max-height: none;
+    }
+
+    .modal-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 18px;
+    }
+
+    .modal-close {
+        display: block;
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: #64748b;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-group {
+        width: 100%;
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    .modal-actions button {
+        width: 100%;
+    }
+
+    /* Footer Mobile */
+    .footer {
+        padding: 32px 16px 20px;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .footer-section {
+        text-align: center;
+    }
+
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    /* User Dropdown Mobile */
+    .user-dropdown-menu {
+        right: 0;
+        left: auto;
+        width: 250px;
+    }
+
+    .user-info {
+        padding: 12px;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .user-details {
+        margin-left: 12px;
+    }
+
+    .user-name {
+        font-size: 14px;
+    }
+
+    .user-email {
+        font-size: 12px;
+    }
+
+    .dropdown-item {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    /* Messages Mobile */
+    [style*="position: fixed"] {
+        max-width: calc(100vw - 32px) !important;
+        right: 16px !important;
+    }
+}
+
+/* Small Tablets */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .sidebar {
+        width: 80px;
+    }
+
+    .sidebar-text {
+        display: none;
+    }
+
+    .sidebar-item {
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .sidebar-item span:first-child {
+        font-size: 20px;
+    }
+
+    .main-content {
+        margin-left: 80px;
+    }
+
+    .dashboard-grid {
+        display: block;
+    }
+
+    .left-column {
+        width: 100%;
+        margin-bottom: 24px;
+    }
+
+    .projects-panel {
+        width: 100%;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop Adjustments */
+@media screen and (min-width: 1025px) {
+    .sidebar-toggle {
+        display: none;
+    }
+
+    .modal-close {
+        display: none;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    .left-column {
+        width: 100%;
+    }
+
+    .projects-panel {
+        width: 100%;
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+}
+
+/* Landscape Mode Adjustments for Mobile */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .top-nav {
+        padding: 8px 16px;
+    }
+
+    .sidebar-toggle {
+        top: 52px;
+    }
+
+    .main-content {
+        margin-top: 50px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .modal {
+        margin: 10px 0;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .sidebar-toggle,
+    .notification-btn,
+    .user-menu,
+    .footer,
+    .btn,
+    .modal-overlay {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0;
+        padding: 20px;
+    }
+
+    .dashboard-grid {
+        display: block;
+    }
+
+    .table-container {
+        overflow: visible;
+    }
+
+    .project-item {
+        page-break-inside: avoid;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .btn,
+    .sidebar-item,
+    .project-item,
+    .dropdown-item {
+        -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1);
+        tap-highlight-color: rgba(37, 99, 235, 0.1);
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+    }
+
+    .table-container {
+        scrollbar-width: thin;
+    }
+
+    .table-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+}
+
+/* Dark Mode Support (if system preference) */
+@media (prefers-color-scheme: dark) {
+    /* Add dark mode styles here if needed */
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .btn {
+        border: 2px solid currentColor;
+    }
+
+    .modal {
+        border: 2px solid #000;
+    }
+
+    .kpi-card {
+        border: 1px solid #000;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}

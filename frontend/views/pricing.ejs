@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Plans - Contract Mitra</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/settings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+    <style>
+        /* Additional pricing-specific styles */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin: 32px 0;
+        }
+
+        .pricing-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card.featured {
+            border-color: #2563eb;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .plan-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .plan-description {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .plan-price {
+            text-align: center;
+            padding: 24px 0;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .price-symbol {
+            font-size: 24px;
+            font-weight: 600;
+            color: #64748b;
+            vertical-align: top;
+        }
+
+        .price-amount {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+        }
+
+        .price-period {
+            font-size: 16px;
+            color: #64748b;
+            margin-left: 4px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .feature-item i {
+            font-size: 16px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .feature-item .fa-check {
+            color: #10b981;
+        }
+
+        .feature-item.disabled {
+            opacity: 0.5;
+        }
+
+        .feature-item.disabled i {
+            color: #ef4444;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+        }
+
+        .primary-button:hover {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .secondary-button {
+            background: #f8fafc;
+            color: #2563eb;
+            border: 2px solid #2563eb;
+        }
+
+        .secondary-button:hover {
+            background: #eff6ff;
+            transform: translateY(-2px);
+        }
+
+        .current-plan {
+            background: #e2e8f0;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="logo">Contract Mitra</div>
+        <div class="nav-right">
+            <button class="notification-btn">🔔</button>
+            
+            <!-- User Menu with Dropdown -->
+            <div class="user-menu">
+                <button class="user-dropdown" onclick="toggleUserMenu()">
+                    <span id="userNameDisplay">User</span> ▼
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div class="user-dropdown-menu" id="userDropdownMenu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-details">
+                            <div class="user-name" id="userFullName">User Name</div>
+                            <div class="user-email" id="userEmail">user@example.com</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="/" class="dropdown-item">👤 Profile</a>
+                    <a href="/settings" class="dropdown-item">⚙️ Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item logout-item" onclick="handleLogout(event)">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Toggle (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-item">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="/project" class="sidebar-item">
+            <span>📁</span>
+            <span>Projects</span>
+        </a>
+        <a href="/document" class="sidebar-item">
+            <span>📄</span>
+            <span>Documents</span>
+        </a>
+        <a href="/chat" class="sidebar-item">
+            <span>💬</span>
+            <span>Chat</span>
+        </a>
+        <a href="/settings" class="sidebar-item">
+            <span>⚙️</span>
+            <span>Settings</span>
+        </a>
+        <a href="/pricing" class="sidebar-item active">
+            <span>💰</span>
+            <span>Pricing</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="settings-container" style="grid-template-columns: 1fr;">
+            <div class="settings-content">
+                <!-- Header -->
+                <div class="section-header" style="text-align: center;">
+                    <h1 class="section-title">Choose Your Perfect Plan</h1>
+                    <p class="section-subtitle">Simple, transparent pricing for legal document management</p>
+                </div>
+
+                <!-- Pricing Cards -->
+                <div class="pricing-grid">
+                    <!-- Free Plan -->
+                    <div class="pricing-card">
+                        <div class="plan-header">
+                            <h3 class="plan-name">Starter</h3>
+                            <p class="plan-description">Perfect for testing & individual use</p>
+                        </div>
+                        
+                        <div class="plan-price">
+                            <span class="price-symbol">₹</span>
+                            <span class="price-amount">0</span>
+                            <span class="price-period">/month</span>
+                        </div>
+
+                        <ul class="plan-features">
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>2 Projects</strong></span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>40 Documents</strong> total</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>50 AI Messages</strong> per month</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Basic document upload</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Text extraction (no OCR)</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>5 MB file size limit</span>
+                            </li>
+                            <li class="feature-item disabled">
+                                <i class="fas fa-times"></i>
+                                <span>OCR for scanned PDFs</span>
+                            </li>
+                            <li class="feature-item disabled">
+                                <i class="fas fa-times"></i>
+                                <span>Advanced AI analysis</span>
+                            </li>
+                        </ul>
+
+                        <button class="plan-button current-plan" disabled>
+                            <i class="fas fa-check-circle"></i> Current Plan
+                        </button>
+                    </div>
+
+                    <!-- Pro Plan -->
+                    <div class="pricing-card featured">
+                        <div class="popular-badge">
+                            <i class="fas fa-star"></i> MOST POPULAR
+                        </div>
+                        
+                        <div class="plan-header">
+                            <h3 class="plan-name">Professional</h3>
+                            <p class="plan-description">Best for small firms & contractors</p>
+                        </div>
+                        
+                        <div class="plan-price">
+                            <span class="price-symbol">₹</span>
+                            <span class="price-amount">10,000</span>
+                            <span class="price-period">/month</span>
+                        </div>
+
+                        <ul class="plan-features">
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>10 Projects</strong></span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>Unlimited Documents</strong></span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>500 AI Messages</strong> per month</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Advanced OCR for scanned PDFs</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Priority AI support</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>50 MB file size limit</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Contract templates library</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Email support</span>
+                            </li>
+                        </ul>
+
+                        <button class="plan-button primary-button" onclick="upgradePlan('professional')">
+                            <i class="fas fa-arrow-up"></i> Upgrade to Pro
+                        </button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card">
+                        <div class="plan-header">
+                            <h3 class="plan-name">Enterprise</h3>
+                            <p class="plan-description">For large organizations</p>
+                        </div>
+                        
+                        <div class="plan-price">
+                            <span class="price-symbol">₹</span>
+                            <span class="price-amount">Custom</span>
+                        </div>
+
+                        <ul class="plan-features">
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>Unlimited Projects</strong></span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>Unlimited Documents</strong></span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span><strong>Unlimited AI Messages</strong></span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Advanced AI analysis & insights</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Custom integrations</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Dedicated account manager</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>24/7 phone support</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check"></i>
+                                <span>Custom contract templates</span>
+                            </li>
+                        </ul>
+
+                        <button class="plan-button secondary-button" onclick="contactSales()">
+                            <i class="fas fa-phone"></i> Contact Sales
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Back to Settings Button -->
+                <div style="text-align: center; margin-top: 32px;">
+                    <a href="/settings#billing" class="btn btn-secondary" style="padding: 12px 32px;">
+                        <i class="fas fa-arrow-left"></i> Back to Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/settings.js"></script>
+    <script>
+        // Pricing page specific functions
+        function upgradePlan(plan) {
+            if (confirm('Upgrade to Professional Plan?\n\nAmount: ₹10,000 per month\n\nYou will be redirected to payment page.')) {
+                alert('Payment Gateway Integration Coming Soon!\n\nPlan: Professional\nAmount: ₹10,000/month\n\nYou will receive an email with payment instructions.');
+            }
+        }
+
+        function contactSales() {
+            if (confirm('Contact our sales team for Enterprise plan?\n\nYou will be redirected to contact form.')) {
+                alert('Contact Sales Form\n\nFor Enterprise plan inquiries:\n\n📧 Email: sales@contractmitra.com\n📞 Phone: +91 XXXX-XXXXXX\n\nOur team will contact you within 24 hours.');
+            }
+        }
+    </script>
+</body>
+</html>

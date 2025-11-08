@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Contract Mitra</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/settings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+    <style>
+        /* WhatsApp Style Profile Picture Upload */
+        .profile-picture-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+
+        .profile-picture-wrapper {
+            position: relative;
+            width: 150px;
+            height: 150px;
+        }
+
+        .profile-picture-container {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 5px solid white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-picture-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .profile-picture-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .profile-picture-preview.active {
+            display: block;
+        }
+
+        .profile-picture-placeholder {
+            font-size: 60px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+        }
+
+        .profile-picture-placeholder.hidden {
+            display: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 45px;
+            height: 45px;
+            background: #25D366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 3px solid white;
+        }
+
+        .camera-overlay:hover {
+            transform: scale(1.1);
+            background: #20BA5A;
+        }
+
+        .camera-overlay i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .profile-picture-input {
+            display: none;
+        }
+
+        .profile-name-display {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .profile-email-display {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Fancy Form Design */
+        .fancy-form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .form-section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section-title i {
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .fancy-form-group {
+            position: relative;
+        }
+
+        .fancy-input {
+            width: 100%;
+            padding: 16px 16px 16px 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            font-family: inherit;
+        }
+
+        .fancy-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .fancy-input:focus + .fancy-label {
+            color: #667eea;
+            transform: translateY(-32px) scale(0.85);
+        }
+
+        .fancy-input:not(:placeholder-shown) + .fancy-label {
+            transform: translateY(-32px) scale(0.85);
+        }
+
+        .fancy-label {
+            position: absolute;
+            left: 45px;
+            top: 18px;
+            color: #64748b;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            background: white;
+            padding: 0 8px;
+            font-weight: 500;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 18px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .fancy-textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .fancy-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Fancy Checkbox */
+        .fancy-checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .fancy-checkbox {
+            position: relative;
+        }
+
+        .fancy-checkbox input[type="checkbox"] {
+            display: none;
+        }
+
+        .fancy-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .fancy-checkbox input[type="checkbox"]:checked + .fancy-checkbox-label {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .fancy-checkbox-label i {
+            font-size: 16px;
+        }
+
+        /* Save Button */
+        .save-profile-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            margin-top: 30px;
+        }
+
+        .save-profile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .save-profile-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Success/Error Messages */
+        .message-box {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message-box.success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #22c55e;
+        }
+
+        .message-box.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .message-box.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading State */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .fancy-form-container {
+                padding: 25px;
+            }
+
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="logo">Contract Mitra</div>
+        <div class="nav-right">
+            <button class="notification-btn">🔔</button>
+            
+            <!-- User Menu with Dropdown -->
+            <div class="user-menu">
+                <button class="user-dropdown" onclick="toggleUserMenu()">
+                    <span id="userNameDisplay">User</span> ▼
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div class="user-dropdown-menu" id="userDropdownMenu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-details">
+                            <div class="user-name" id="userFullName">User Name</div>
+                            <div class="user-email" id="userEmail">user@example.com</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="/" class="dropdown-item">👤 Profile</a>
+                    <a href="/settings" class="dropdown-item">⚙ Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item logout-item" onclick="handleLogout(event)">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Toggle (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-item">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="/project" class="sidebar-item">
+            <span>📁</span>
+            <span>Projects</span>
+        </a>
+        <a href="/document" class="sidebar-item">
+            <span>📄</span>
+            <span>Documents</span>
+        </a>
+        <a href="/chat" class="sidebar-item">
+            <span>💬</span>
+            <span>Chat</span>
+        </a>
+        <a href="/settings" class="sidebar-item active">
+            <span>⚙</span>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="settings-container">
+            <!-- Settings Navigation -->
+            <nav class="settings-nav">
+                <a href="#profile" class="settings-nav-item active" onclick="showSection('profile', event)">
+                    <i class="fa-solid fa-user"></i> Profile
+                </a>
+                <a href="#billing" class="settings-nav-item" onclick="showSection('billing', event)">
+                    <i class="fa-solid fa-credit-card"></i> Billing & Usage
+                </a>
+                <a href="#privacy" class="settings-nav-item" onclick="showSection('privacy', event)">
+                    <i class="fa-solid fa-lock"></i> Privacy Policy
+                </a>
+            </nav>
+
+            <!-- Settings Content -->
+            <div class="settings-content">
+                <!-- Profile Section -->
+                <div id="profile" class="settings-section active">
+                    <!-- Loading Overlay -->
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-spinner"></div>
+                    </div>
+
+                    <!-- Message Box -->
+                    <div class="message-box" id="messageBox">
+                        <i class="fas fa-check-circle"></i>
+                        <span id="messageText"></span>
+                    </div>
+
+                    <!-- Profile Picture Section -->
+                    <div class="profile-picture-section">
+                        <div class="profile-picture-wrapper">
+                            <div class="profile-picture-container" onclick="document.getElementById('profilePictureInput').click()">
+                                <img id="profilePicturePreview" class="profile-picture-preview" alt="Profile Picture">
+                                <div id="profilePicturePlaceholder" class="profile-picture-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </div>
+                            <div class="camera-overlay" onclick="document.getElementById('profilePictureInput').click()">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <input type="file" id="profilePictureInput" class="profile-picture-input" accept="image/*">
+                        </div>
+                        <div class="profile-name-display" id="profileNameDisplay">Your Name</div>
+                        <div class="profile-email-display" id="profileEmailDisplay">your.email@example.com</div>
+                    </div>
+
+                    <!-- Profile Form -->
+                    <form id="profileForm" class="fancy-form-container">
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h2 class="form-section-title">
+                                <i class="fas fa-user-circle"></i>
+                                Basic Information
+                            </h2>
+                            <div class="form-grid-2">
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-user input-icon"></i>
+                                    <input type="text" id="fullName" name="fullName" class="fancy-input" placeholder=" " required>
+                                    <label class="fancy-label" for="fullName">Full Name *</label>
+                                </div>
+
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-envelope input-icon"></i>
+                                    <input type="email" id="email" name="email" class="fancy-input" placeholder=" " required>
+                                    <label class="fancy-label" for="email">Email Address *</label>
+                                </div>
+
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-phone input-icon"></i>
+                                    <input type="tel" id="phone" name="phone" class="fancy-input" placeholder=" " required>
+                                    <label class="fancy-label" for="phone">Phone Number *</label>
+                                </div>
+
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-map-marker-alt input-icon"></i>
+                                    <input type="text" id="location" name="location" class="fancy-input" placeholder=" ">
+                                    <label class="fancy-label" for="location">Location</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Business Details -->
+                        <div class="form-section">
+                            <h2 class="form-section-title">
+                                <i class="fas fa-building"></i>
+                                Business / Company Details
+                            </h2>
+                            <div class="form-grid-2">
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-briefcase input-icon"></i>
+                                    <input type="text" id="companyName" name="companyName" class="fancy-input" placeholder=" ">
+                                    <label class="fancy-label" for="companyName">Company Name</label>
+                                </div>
+
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-layer-group input-icon"></i>
+                                    <input type="text" id="businessType" name="businessType" class="fancy-input" placeholder=" ">
+                                    <label class="fancy-label" for="businessType">Business Type</label>
+                                </div>
+
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-file-invoice input-icon"></i>
+                                    <input type="text" id="gstNumber" name="gstNumber" class="fancy-input" placeholder=" ">
+                                    <label class="fancy-label" for="gstNumber">GST / Tax ID</label>
+                                </div>
+
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-globe input-icon"></i>
+                                    <input type="url" id="website" name="website" class="fancy-input" placeholder=" ">
+                                    <label class="fancy-label" for="website">Website</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Professional Information -->
+                        <div class="form-section">
+                            <h2 class="form-section-title">
+                                <i class="fas fa-user-tie"></i>
+                                Professional Information
+                            </h2>
+                            <div class="form-grid-2">
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-tools input-icon"></i>
+                                    <input type="text" id="expertise" name="expertise" class="fancy-input" placeholder=" ">
+                                    <label class="fancy-label" for="expertise">Primary Expertise</label>
+                                </div>
+
+                                <div class="fancy-form-group">
+                                    <i class="fas fa-calendar-alt input-icon"></i>
+                                    <input type="number" id="experience" name="experience" class="fancy-input" placeholder=" " min="0">
+                                    <label class="fancy-label" for="experience">Years of Experience</label>
+                                </div>
+                            </div>
+
+                            <div class="fancy-form-group" style="margin-top: 20px;">
+                                <label style="display: block; margin-bottom: 15px; font-weight: 600; color: #1e293b;">
+                                    <i class="fas fa-cogs" style="margin-right: 8px; color: #667eea;"></i>
+                                    Skills & Specializations
+                                </label>
+                                <div class="fancy-checkbox-group">
+                                    <div class="fancy-checkbox">
+                                        <input type="checkbox" id="skill1" name="skills" value="Construction">
+                                        <label class="fancy-checkbox-label" for="skill1">
+                                            <i class="fas fa-hard-hat"></i> Construction
+                                        </label>
+                                    </div>
+                                    <div class="fancy-checkbox">
+                                        <input type="checkbox" id="skill2" name="skills" value="Electrical">
+                                        <label class="fancy-checkbox-label" for="skill2">
+                                            <i class="fas fa-bolt"></i> Electrical
+                                        </label>
+                                    </div>
+                                    <div class="fancy-checkbox">
+                                        <input type="checkbox" id="skill3" name="skills" value="Plumbing">
+                                        <label class="fancy-checkbox-label" for="skill3">
+                                            <i class="fas fa-wrench"></i> Plumbing
+                                        </label>
+                                    </div>
+                                    <div class="fancy-checkbox">
+                                        <input type="checkbox" id="skill4" name="skills" value="Carpentry">
+                                        <label class="fancy-checkbox-label" for="skill4">
+                                            <i class="fas fa-hammer"></i> Carpentry
+                                        </label>
+                                    </div>
+                                    <div class="fancy-checkbox">
+                                        <input type="checkbox" id="skill5" name="skills" value="HVAC">
+                                        <label class="fancy-checkbox-label" for="skill5">
+                                            <i class="fas fa-fan"></i> HVAC
+                                        </label>
+                                    </div>
+                                    <div class="fancy-checkbox">
+                                        <input type="checkbox" id="skill6" name="skills" value="Painting">
+                                        <label class="fancy-checkbox-label" for="skill6">
+                                            <i class="fas fa-paint-roller"></i> Painting
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="fancy-form-group" style="margin-top: 20px;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1e293b;">
+                                    <i class="fas fa-quote-left" style="margin-right: 8px; color: #667eea;"></i>
+                                    Professional Bio
+                                </label>
+                                <textarea id="bio" name="bio" class="fancy-textarea" placeholder="Tell us about your experience and what makes you stand out..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <button type="submit" class="save-profile-btn">
+                            <i class="fas fa-save" style="margin-right: 10px;"></i>
+                            Save Profile
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Billing Section -->
+                <div id="billing" class="settings-section" style="display: none;">
+                    <div class="section-header">
+                        <h1 class="section-title">Billing & Usage</h1>
+                        <p class="section-subtitle">Manage your subscription and view usage statistics</p>
+                    </div>
+
+                    <div id="billingContent" style="margin-top: 30px;">
+                        
+                        <!-- Current Plan Card -->
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 32px; margin-bottom: 32px; color: white; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+                                <div>
+                                    <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 8px 0; color:#fff;">Free Plan</h2>
+                                    <p style="opacity: 0.9; margin: 0; color:#fff;">Perfect for getting started</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 32px; font-weight: 700; margin: 0;">₹0</div>
+                                    <div style="opacity: 0.9; font-size: 14px;">per month</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <button onclick="window.location.href='/pricing'" style="background: white; color: #667eea; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                    <i class="fa-solid fa-rocket"></i> Upgrade Plan
+                                </button>
+                                <button onclick="window.location.href='/pricing'" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                    <i class="fa-solid fa-crown"></i> View All Plans
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Usage Statistics -->
+                        <div style="margin-bottom: 32px;">
+                            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 16px; color: #1f2937;">
+                                <i class="fa-solid fa-chart-line"></i> Usage Statistics
+                            </h3>
+                            <div class="usage-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <div class="usage-item" style="background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:24px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                    <div style="display:flex; align-items:center; margin-bottom:16px;">
+                                        <div style="width:48px;height:48px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-right:16px;">
+                                            <i class="fa-solid fa-comments" style="font-size:24px;color:#2563eb;"></i>
+                                        </div>
+                                        <div style="flex:1;">
+                                            <div style="font-weight:600;color:#111827;font-size:16px;">AI Messages</div>
+                                            <div class="usage-value" style="color:#6b7280;font-size:24px;font-weight:700;margin-top:4px;">0 / 50</div>
+                                        </div>
+                                    </div>
+                                    <div class="usage-bar" style="height:10px;background:#f3f4f6;border-radius:9999px;overflow:hidden;">
+                                        <div class="usage-fill" style="height:10px;width:0%;background:#2563eb;border-radius:9999px;transition:width 0.5s;"></div>
+                                    </div>
+                                    <div style="margin-top:12px;font-size:13px;color:#6b7280;">
+                                        <i class="fa-solid fa-circle-info"></i> Resets monthly
+                                    </div>
+                                </div>
+
+                                <div class="usage-item" style="background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:24px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                    <div style="display:flex; align-items:center; margin-bottom:16px;">
+                                        <div style="width:48px;height:48px;background:#ecfdf5;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-right:16px;">
+                                            <i class="fa-solid fa-folder" style="font-size:24px;color:#10b981;"></i>
+                                        </div>
+                                        <div style="flex:1;">
+                                            <div style="font-weight:600;color:#111827;font-size:16px;">Projects</div>
+                                            <div class="usage-value" style="color:#6b7280;font-size:24px;font-weight:700;margin-top:4px;">0 / 2</div>
+                                        </div>
+                                    </div>
+                                    <div class="usage-bar" style="height:10px;background:#f3f4f6;border-radius:9999px;overflow:hidden;">
+                                        <div class="usage-fill" style="height:10px;width:0%;background:#10b981;border-radius:9999px;transition:width 0.5s;"></div>
+                                    </div>
+                                    <div style="margin-top:12px;font-size:13px;color:#6b7280;">
+                                        <i class="fa-solid fa-circle-info"></i> Active projects limit
+                                    </div>
+                                </div>
+
+                                <div class="usage-item" style="background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:24px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                    <div style="display:flex; align-items:center; margin-bottom:16px;">
+                                        <div style="width:48px;height:48px;background:#fff7ed;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-right:16px;">
+                                            <i class="fa-solid fa-file-lines" style="font-size:24px;color:#f59e0b;"></i>
+                                        </div>
+                                        <div style="flex:1;">
+                                            <div style="font-weight:600;color:#111827;font-size:16px;">Documents</div>
+                                            <div class="usage-value" style="color:#6b7280;font-size:24px;font-weight:700;margin-top:4px;">0 / 40</div>
+                                        </div>
+                                    </div>
+                                    <div class="usage-bar" style="height:10px;background:#f3f4f6;border-radius:9999px;overflow:hidden;">
+                                        <div class="usage-fill" style="height:10px;width:0%;background:#f59e0b;border-radius:9999px;transition:width 0.5s;"></div>
+                                    </div>
+                                    <div style="margin-top:12px;font-size:13px;color:#6b7280;">
+                                        <i class="fa-solid fa-circle-info"></i> Total documents allowed
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Plan Features -->
+                        <div style="background: #f9fafb; border-radius: 16px; padding: 28px; margin-bottom: 32px;">
+                            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #1f2937;">
+                                <i class="fa-solid fa-star"></i> Your Current Plan Includes
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-check" style="color: white; font-size: 14px;"></i>
+                                    </div>
+                                    <span style="color: #374151; font-weight: 500;">50 AI Messages per month</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-check" style="color: white; font-size: 14px;"></i>
+                                    </div>
+                                    <span style="color: #374151; font-weight: 500;">2 Active Projects</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-check" style="color: white; font-size: 14px;"></i>
+                                    </div>
+                                    <span style="color: #374151; font-weight: 500;">40 Documents Upload</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-check" style="color: white; font-size: 14px;"></i>
+                                    </div>
+                                    <span style="color: #374151; font-weight: 500;">Basic AI Contract Analysis</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-check" style="color: white; font-size: 14px;"></i>
+                                    </div>
+                                    <span style="color: #374151; font-weight: 500;">Email Support</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid fa-check" style="color: white; font-size: 14px;"></i>
+                                    </div>
+                                    <span style="color: #374151; font-weight: 500;">Document Search & Chat</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upgrade Prompt -->
+                        <div style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 16px; padding: 32px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">
+                                <i class="fa-solid fa-crown"></i>
+                            </div>
+                            <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 12px; color: white;">Need More?</h3>
+                            <p style="color: rgba(255,255,255,0.95); margin-bottom: 24px; font-size: 16px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                                Upgrade to Premium for unlimited AI messages, unlimited projects, priority support, and advanced analytics features.
+                            </p>
+                            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="window.location.href='/pricing'" style="background: white; color: #0b49f5; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                    <i class="fa-solid fa-rocket"></i> View Premium Plans
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                </div>
+
+                <!-- Privacy Section -->
+                <div id="privacy" class="settings-section" style="display: none;">
+                    <div class="section-header">
+                        <h1 class="section-title">Privacy Policy</h1>
+                        <p class="section-subtitle">Your data privacy and security</p>
+                    </div>
+                    <div style="padding: 0 0 16px 0;">
+                        <%- include('partials/privacy_content') %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">Contract Mitra</h3>
+                <p class="footer-text">Your intelligent contract management solution powered by AI.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/project">Projects</a></li>
+                    <li><a href="/document">Documents</a></li>
+                    <li><a href="/chat">AI Chat</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Connect</h4>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/contractmitra/" class="social-link" title="Instagram" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61581035338307" class="social-link" title="Facebook" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/contract-mitra-846a27384/" class="social-link" title="LinkedIn" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://x.com/ContractMitra" class="social-link" title="X" aria-label="X (Twitter)">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 Contract Mitra. All rights reserved.</p>
+            <p>Made with ❤ for better contract management</p>
+        </div>
+    </footer>
+
+    <script src="/js/settings.js"></script>
+    <script>
+        // Profile Picture Upload Handler
+        const profilePictureInput = document.getElementById('profilePictureInput');
+        const profilePicturePreview = document.getElementById('profilePicturePreview');
+        const profilePicturePlaceholder = document.getElementById('profilePicturePlaceholder');
+        
+        let uploadedProfilePicture = null;
+
+        profilePictureInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showMessage('Image size should be less than 5MB', 'error');
+                    return;
+                }
+
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showMessage('Please select a valid image file', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    profilePicturePreview.src = event.target.result;
+                    profilePicturePreview.classList.add('active');
+                    profilePicturePlaceholder.classList.add('hidden');
+                    uploadedProfilePicture = file;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Message Display Function
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            
+            messageBox.className = 'message-box show ' + type;
+            messageText.textContent = message;
+            
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Loading Overlay Functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        // Upload Profile Picture to Supabase Storage
+        async function uploadProfilePicture(userId, file) {
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${userId}_${Date.now()}.${fileExt}`;
+                const filePath = `profile-pictures/${fileName}`;
+
+                const { data, error } = await supabase.storage
+                    .from('profiles')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (error) throw error;
+
+                // Get public URL
+                const { data: urlData } = supabase.storage
+                    .from('profiles')
+                    .getPublicUrl(filePath);
+
+                return urlData.publicUrl;
+            } catch (error) {
+                console.error('Error uploading picture:', error);
+                throw error;
+            }
+        }
+
+        // Load Profile Data
+        async function loadProfileData() {
+            try {
+                showLoading();
+                
+                // Get current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError) throw userError;
+                if (!user) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                // Load profile from database
+                const { data: profile, error: profileError } = await supabase
+                    .from('contractor_profiles')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (profile) {
+                    // Populate form fields
+                    document.getElementById('fullName').value = profile.full_name || '';
+                    document.getElementById('email').value = profile.email || user.email;
+                    document.getElementById('phone').value = profile.phone || '';
+                    document.getElementById('location').value = profile.location || '';
+                    document.getElementById('companyName').value = profile.company_name || '';
+                    document.getElementById('businessType').value = profile.business_type || '';
+                    document.getElementById('gstNumber').value = profile.gst_number || '';
+                    document.getElementById('website').value = profile.website || '';
+                    document.getElementById('expertise').value = profile.expertise || '';
+                    document.getElementById('experience').value = profile.experience_years || '';
+                    document.getElementById('bio').value = profile.bio || '';
+
+                    // Set profile picture
+                    if (profile.profile_picture_url) {
+                        profilePicturePreview.src = profile.profile_picture_url;
+                        profilePicturePreview.classList.add('active');
+                        profilePicturePlaceholder.classList.add('hidden');
+                    }
+
+                    // Set display name and email
+                    document.getElementById('profileNameDisplay').textContent = profile.full_name || 'Your Name';
+                    document.getElementById('profileEmailDisplay').textContent = profile.email || user.email;
+
+                    // Set skills checkboxes
+                    if (profile.skills && Array.isArray(profile.skills)) {
+                        profile.skills.forEach(skill => {
+                            const checkbox = document.querySelector(`input[name="skills"][value="${skill}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        });
+                    }
+                }
+
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                hideLoading();
+                showMessage('Error loading profile data', 'error');
+            }
+        }
+
+        // Save Profile Data
+        async function saveProfileData(formData) {
+            try {
+                showLoading();
+
+                // Get current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError) throw userError;
+                if (!user) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                // Upload profile picture if changed
+                let profilePictureUrl = null;
+                if (uploadedProfilePicture) {
+                    profilePictureUrl = await uploadProfilePicture(user.id, uploadedProfilePicture);
+                }
+
+                // Get selected skills
+                const skills = Array.from(document.querySelectorAll('input[name="skills"]:checked'))
+                    .map(cb => cb.value);
+
+                // Prepare profile data
+                const profileData = {
+                    user_id: user.id,
+                    full_name: formData.get('fullName'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    location: formData.get('location'),
+                    company_name: formData.get('companyName'),
+                    business_type: formData.get('businessType'),
+                    gst_number: formData.get('gstNumber'),
+                    website: formData.get('website'),
+                    expertise: formData.get('expertise'),
+                    experience_years: parseInt(formData.get('experience')) || null,
+                    bio: formData.get('bio'),
+                    skills: skills,
+                    updated_at: new Date().toISOString()
+                };
+
+                if (profilePictureUrl) {
+                    profileData.profile_picture_url = profilePictureUrl;
+                }
+
+                // Upsert profile data
+                const { data, error } = await supabase
+                    .from('contractor_profiles')
+                    .upsert(profileData, { onConflict: 'user_id' });
+
+                if (error) throw error;
+
+                hideLoading();
+                showMessage('Profile saved successfully! ✅', 'success');
+                
+                // Update display
+                document.getElementById('profileNameDisplay').textContent = profileData.full_name || 'Your Name';
+                document.getElementById('profileEmailDisplay').textContent = profileData.email;
+
+                // ✅ TRIGGER NAVBAR UPDATE - Update user info across all pages
+                if (typeof window.refreshUserInfo === 'function') {
+                    window.refreshUserInfo().then(() => {
+                        console.log('✅ Navbar info updated!');
+                    });
+                }
+                
+                // Dispatch custom event for other pages to listen
+                window.dispatchEvent(new Event('userInfoUpdated'));
+
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                hideLoading();
+                showMessage('Error saving profile: ' + error.message, 'error');
+            }
+        }
+
+        // Form Submit Handler
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            saveProfileData(formData);
+        });
+
+        // Load profile on page load
+        window.addEventListener('DOMContentLoaded', loadProfileData);
+
+        // Settings Navigation (keeps URL hash and triggers usage load)
+        function showSection(sectionId, event) {
+            if (event && event.preventDefault) event.preventDefault();
+
+            // Hide all sections
+            document.querySelectorAll('.settings-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            const sectionEl = document.getElementById(sectionId);
+            if (sectionEl) sectionEl.style.display = 'block';
+
+            // Update active nav item by href match
+            document.querySelectorAll('.settings-nav-item').forEach(item => {
+                const href = item.getAttribute('href');
+                if (href === `#${sectionId}`) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+    
+
+            // Update hash for deep-linking
+            if (window.location.hash !== `#${sectionId}`) {
+                history.replaceState(null, '', `#${sectionId}`);
+            }
+
+            // Trigger usage loading when billing tab is shown
+            if (sectionId === 'billing' && typeof loadUsageStats === 'function') {
+                loadUsageStats();
+            }
+        }
+
+        // Initialize correct tab from hash on first load
+        window.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash.replace('#','');
+            if (hash === 'billing' || hash === 'privacy') {
+                showSection(hash);
+            } else {
+                showSection('profile');
+            }
+        });
+    </script>
+</body>
+</html>

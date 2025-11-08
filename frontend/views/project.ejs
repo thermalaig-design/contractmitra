@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Contract Mitra</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/project.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+</head>
+<body>
+    <!-- Top Navigation -->
+      <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="logo">Contract Mitra</div>
+        <div class="nav-right">
+            <button class="notification-btn">🔔</button>
+
+            <!-- User Menu button (uses same IDs as dashboard) -->
+            <div class="user-menu">
+                <button class="user-dropdown" onclick="toggleUserMenu()">
+                    <span id="userNameDisplay">User</span> ▼
+                </button>
+            </div>
+        </div>
+    </nav>
+<!-- User Menu with Dropdown -->
+<div class="user-menu">
+    <button class="user-dropdown" onclick="toggleUserMenu()">
+        <span id="userNameDisplay">User</span> ▼
+    </button>
+    
+    <!-- Dropdown Menu -->
+    <div class="user-dropdown-menu" id="userDropdownMenu">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div class="user-details">
+                <div class="user-name" id="userFullName">User Name</div>
+                <div class="user-email" id="userEmail">user@example.com</div>
+            </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item">👤 Profile</a>
+        <a href="/settings" class="dropdown-item">⚙️ Settings</a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item logout-item" onclick="handleLogout(event)">🚪 Logout</a>
+    </div>
+</div>
+    <!-- Sidebar Toggle (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-item">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="/project" class="sidebar-item active">
+            <span>📁</span>
+            <span>Projects</span>
+        </a>
+        <a href="/document" class="sidebar-item">
+            <span>📄</span>
+            <span>Documents</span>
+        </a>
+        <a href="/chat" class="sidebar-item">
+            <span>💬</span>
+            <span>Chat</span>
+        </a>
+        <a href="/settings" class="sidebar-item">
+            <span>⚙️</span>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Page Header -->
+        <div class="projects-page-header">
+            <div class="page-title-section">
+                <h1>Projects</h1>
+                <p class="page-subtitle">Manage and track all your legal projects</p>
+            </div>
+           <div class="projects-controls">
+    <button class="add-project-btn" onclick="openAddProjectModal()">
+        <span class="plus-icon">＋</span>
+        <span>Add New Project</span>
+    </button>
+</div>
+
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search projects..." id="searchInput">
+            </div>
+            
+            <div class="filter-group">
+                <select class="filter-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+                
+                <select class="filter-select" id="departmentFilter">
+                    <option value="">All Departments</option>
+                    <option value="Legal">Legal</option>
+                    <option value="HR">HR</option>
+                    <option value="Operations">Operations</option>
+                    <option value="Finance">Finance</option>
+                    <option value="IT">IT</option>
+                </select>
+            </div>
+
+            <div class="sort-buttons">
+                <button class="sort-btn active" data-sort="desc" id="sortDesc">
+                    <span>↓</span>
+                    <span>Newest</span>
+                </button>
+                <button class="sort-btn" data-sort="asc" id="sortAsc">
+                    <span>↑</span>
+                    <span>Oldest</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Projects Statistics -->
+        <div class="projects-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalProjects">0</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeProjects">0</div>
+                <div class="stat-label">Active Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedProjects">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalDocuments">0</div>
+                <div class="stat-label">Total Documents</div>
+            </div>
+        </div>
+
+        <!-- Projects Table -->
+        <div class="projects-table-container">
+            <table class="projects-table">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th>Department</th>
+                        <th>Division</th>
+                        <th>Status</th>
+                        <th>Documents</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="projectsTableBody">
+                    <!-- Projects will be dynamically loaded here -->
+                </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-state-icon">📂</div>
+                <h3>No Projects Found</h3>
+                <p>Get started by creating your first project</p>
+                <button class="btn" onclick="openAddProjectModal()">Create New Project</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Project Modal -->
+    <div class="modal-overlay" id="addProjectModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Project</h3>
+                <button class="modal-close" onclick="closeAddProjectModal()">×</button>
+            </div>
+            <form id="projectForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="projectName">Project Name *</label>
+                        <input type="text" id="projectName" name="projectName" class="form-input" placeholder="Enter project name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="departmentName">Department *</label>
+                        <select id="departmentName" name="departmentName" class="form-select" required>
+                            <option value="">Select Department</option>
+                            <option value="Legal">Legal</option>
+                            <option value="HR">HR</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Finance">Finance</option>
+                            <option value="IT">IT</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="divisionName">Division *</label>
+                        <input type="text" id="divisionName" name="divisionName" class="form-input" placeholder="Enter division name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="status">Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea id="description" name="description" class="form-textarea" placeholder="Enter project description"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeAddProjectModal()">Cancel</button>
+                    <button type="submit" class="btn">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<!-- Project Details Modal -->
+<div class="modal-overlay" id="projectDetailsModal">
+    <div class="modal project-details-modal">
+      <!-- Modal Header -->
+<div class="project-details-header">
+    <button class="back-btn" onclick="closeProjectDetails()">← Back to Projects</button>
+  
+</div>
+
+        <!-- Project Title Section -->
+        <div class="project-title-section">
+            <h1 id="detailProjectName">Project Name</h1>
+            <div class="project-meta">
+                <span class="status-badge" id="detailProjectStatus">Active</span>
+                <span class="meta-item">📅 Created: <strong id="detailCreatedDate">Jan 1, 2024</strong></span>
+                <span class="meta-item">📝 Updated: <strong id="detailUpdatedDate">Jan 15, 2024</strong></span>
+            </div>
+        </div>
+
+        <!-- Project Stats -->
+        <div class="project-detail-stats">
+            <div class="detail-stat-card">
+                <div class="detail-stat-icon">📄</div>
+                <div class="detail-stat-info">
+                    <div class="detail-stat-number" id="detailDocCount">0</div>
+                    <div class="detail-stat-label">Documents</div>
+                </div>
+            </div>
+            <div class="detail-stat-card">
+                <div class="detail-stat-icon">🏢</div>
+                <div class="detail-stat-info">
+                    <div class="detail-stat-text" id="detailDepartment">Department</div>
+                    <div class="detail-stat-label">Department</div>
+                </div>
+            </div>
+            <div class="detail-stat-card">
+                <div class="detail-stat-icon">🔧</div>
+                <div class="detail-stat-info">
+                    <div class="detail-stat-text" id="detailDivision">Division</div>
+                    <div class="detail-stat-label">Division</div>
+                </div>
+            </div>
+            <div class="detail-stat-card">
+                <div class="detail-stat-icon">💾</div>
+                <div class="detail-stat-info">
+                    <div class="detail-stat-number" id="detailStorage">0 MB</div>
+                    <div class="detail-stat-label">Storage Used</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Description -->
+        <div class="project-detail-section">
+            <h3 class="section-title">📋 Project Description</h3>
+            <div class="description-box" id="detailDescription">
+                No description available
+            </div>
+        </div>
+
+        <!-- Documents List -->
+        <div class="project-detail-section">
+            <div class="section-header-with-action">
+                <h3 class="section-title">📁 Project Documents</h3>
+            </div>
+            
+            <div class="documents-list" id="projectDocumentsList">
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading documents...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">Contract Mitra</h3>
+                <p class="footer-text">Your intelligent contract management solution powered by AI.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/project">Projects</a></li>
+                    <li><a href="/document">Documents</a></li>
+                    <li><a href="/chat">AI Chat</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Connect</h4>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/contractmitra/" class="social-link" title="Instagram" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61581035338307" class="social-link" title="Facebook" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/contract-mitra-846a27384/" class="social-link" title="LinkedIn" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://x.com/ContractMitra" class="social-link" title="X" aria-label="X (Twitter)">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 Contract Mitra. All rights reserved.</p>
+            <p>Made with ❤️ for better contract management</p>
+        </div>
+    </footer>
+
+    <script src="/js/project.js"></script>
+</body>
+</html>

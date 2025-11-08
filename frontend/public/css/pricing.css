@@ -1,0 +1,840 @@
+/* ==================== GLOBAL STYLES ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+}
+
+/* ==================== TOP NAVIGATION ==================== */
+.top-nav {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.menu-toggle {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+    display: none;
+}
+
+.menu-toggle:hover {
+    background: #f1f5f9;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.logo i {
+    font-size: 24px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.user-profile:hover {
+    background: #f8fafc;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* ==================== MAIN CONTAINER ==================== */
+.main-container {
+    display: flex;
+    min-height: calc(100vh - 73px);
+}
+
+/* ==================== SIDEBAR ==================== */
+.sidebar {
+    width: 260px;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    padding: 24px 0;
+    position: sticky;
+    top: 73px;
+    height: calc(100vh - 73px);
+    overflow-y: auto;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 12px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.nav-item:hover {
+    background: #f8fafc;
+    color: #2563eb;
+}
+
+.nav-item.active {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.nav-item i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* ==================== MAIN CONTENT ==================== */
+.content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+/* ==================== SETTINGS CONTAINER (from settings.css) ==================== */
+.settings-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    min-height: calc(100vh - 128px);
+}
+
+.settings-nav {
+    background: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+    padding: 24px 0;
+}
+
+.settings-nav-item {
+    display: block;
+    padding: 12px 24px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-right: 3px solid transparent;
+}
+
+.settings-nav-item:hover, .settings-nav-item.active {
+    background: white;
+    color: #2563eb;
+    border-right-color: #2563eb;
+}
+
+.settings-nav-item i {
+    margin-right: 8px;
+}
+
+.settings-content {
+    padding: 32px;
+    overflow-y: auto;
+}
+
+/* ==================== SECTION HEADER ==================== */
+.section-header {
+    margin-bottom: 32px;
+}
+
+.section-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.section-subtitle {
+    color: #64748b;
+    font-size: 16px;
+}
+
+/* ==================== SETTINGS CARD ==================== */
+.settings-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.card-subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* ==================== CURRENT PLAN CARD ==================== */
+.current-plan-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+    border: 2px solid #2563eb;
+}
+
+.current-plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.plan-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.free-badge {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.pro-badge {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.enterprise-badge {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* ==================== USAGE SECTION ==================== */
+.usage-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.usage-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.usage-item {
+    margin-bottom: 20px;
+}
+
+.usage-item:last-child {
+    margin-bottom: 0;
+}
+
+.usage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.usage-label {
+    font-size: 14px;
+    color: #475569;
+    font-weight: 500;
+}
+
+.usage-label i {
+    margin-right: 6px;
+    color: #2563eb;
+}
+
+.usage-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.usage-bar {
+    width: 100%;
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.usage-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* ==================== BILLING TOGGLE ==================== */
+.billing-toggle-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.billing-toggle {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 10px;
+    gap: 4px;
+}
+
+.toggle-btn {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-btn:hover {
+    color: #2563eb;
+}
+
+.toggle-btn.active {
+    background: white;
+    color: #2563eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.save-badge {
+    background: #dcfce7;
+    color: #166534;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ==================== PRICING GRID ==================== */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+/* ==================== PRICING CARD ==================== */
+.pricing-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.pricing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card.featured {
+    border-color: #2563eb;
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
+}
+
+.popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.popular-badge i {
+    margin-right: 4px;
+}
+
+/* ==================== PLAN HEADER ==================== */
+.plan-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.plan-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.plan-description {
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* ==================== PLAN PRICE ==================== */
+.plan-price {
+    text-align: center;
+    padding: 24px 0;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 24px;
+}
+
+.price-symbol {
+    font-size: 24px;
+    font-weight: 600;
+    color: #64748b;
+    vertical-align: top;
+}
+
+.price-amount {
+    font-size: 48px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.price-period {
+    font-size: 16px;
+    color: #64748b;
+    margin-left: 4px;
+}
+
+.yearly-note {
+    text-align: center;
+    margin-top: 8px;
+}
+
+.yearly-note small {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* ==================== PLAN FEATURES ==================== */
+.plan-features {
+    list-style: none;
+    margin-bottom: 32px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.feature-item i {
+    font-size: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.feature-item .fa-check {
+    color: #10b981;
+}
+
+.feature-item.disabled {
+    opacity: 0.5;
+}
+
+.feature-item.disabled i {
+    color: #ef4444;
+}
+
+/* ==================== PLAN BUTTONS ==================== */
+.plan-button {
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.primary-button {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: white;
+}
+
+.primary-button:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.secondary-button {
+    background: #f8fafc;
+    color: #2563eb;
+    border: 2px solid #2563eb;
+}
+
+.secondary-button:hover {
+    background: #eff6ff;
+    transform: translateY(-2px);
+}
+
+.current-plan {
+    background: #e2e8f0;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* ==================== COMPARISON TABLE ==================== */
+.comparison-section {
+    margin-top: 40px;
+}
+
+.comparison-table-wrapper {
+    overflow-x: auto;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.comparison-table thead {
+    background: #f8fafc;
+}
+
+.comparison-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.comparison-table th.feature-col {
+    text-align: left;
+}
+
+.comparison-table th.featured-col {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.comparison-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.comparison-table td.featured-col {
+    background: #f8fafc;
+    font-weight: 600;
+}
+
+.comparison-table td.feature-name {
+    font-weight: 500;
+    color: #475569;
+}
+
+.text-green {
+    color: #10b981;
+}
+
+.text-red {
+    color: #ef4444;
+}
+
+/* ==================== ADD-ONS SECTION ==================== */
+.addon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.addon-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.addon-item:hover {
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+
+.addon-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.addon-icon {
+    width: 48px;
+    height: 48px;
+    background: #eff6ff;
+    color: #2563eb;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.addon-info h4 {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.addon-info p {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.addon-price {
+    font-weight: 700;
+    color: #2563eb;
+    font-size: 18px;
+}
+
+/* ==================== FAQs ==================== */
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.faq-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.faq-item:hover {
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+
+.faq-question {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+.faq-question i {
+    color: #2563eb;
+    font-size: 18px;
+}
+
+.faq-answer {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.7;
+    padding-left: 30px;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .settings-container {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-nav {
+        display: flex;
+        overflow-x: auto;
+        padding: 16px 0;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .settings-nav-item {
+        white-space: nowrap;
+        padding: 8px 16px;
+        border-right: none;
+        border-bottom: 3px solid transparent;
+    }
+
+    .settings-nav-item.active {
+        border-right: none;
+        border-bottom-color: #2563eb;
+    }
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 73px;
+        z-index: 90;
+        transition: left 0.3s;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+
+    .content {
+        padding: 24px 16px;
+    }
+
+    .settings-content {
+        padding: 24px 16px;
+    }
+
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-table {
+        font-size: 14px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+        padding: 12px 8px;
+    }
+
+    .section-title {
+        font-size: 24px;
+    }
+
+    .plan-price {
+        padding: 20px 0;
+    }
+
+    .price-amount {
+        font-size: 40px;
+    }
+
+    .billing-toggle {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .toggle-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo span {
+        display: none;
+    }
+
+    .user-profile span {
+        display: none;
+    }
+
+    .addon-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .addon-price {
+        align-self: flex-end;
+    }
+}

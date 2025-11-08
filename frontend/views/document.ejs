@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents - Contract Mitra</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/document.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+</head>
+<body>
+    <!-- Top Navigation -->
+   <!-- Top Navigation -->
+<nav class="top-nav">
+    <div class="logo">Contract Mitra</div>
+    <div class="nav-right">
+        <button class="notification-btn">🔔</button>
+        
+        <!-- User Menu with Dropdown -->
+        <div class="user-menu">
+            <button class="user-dropdown" onclick="toggleUserMenu()">
+                <span id="userNameDisplay">User</span> ▼
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div class="user-dropdown-menu" id="userDropdownMenu">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userFullName">User Name</div>
+                        <div class="user-email" id="userEmail">user@example.com</div>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a href="/" class="dropdown-item">👤 Profile</a>
+                <a href="/settings" class="dropdown-item">⚙️ Settings</a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item logout-item" onclick="handleLogout(event)">🚪 Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+    <!-- Sidebar Toggle (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-item">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="/project" class="sidebar-item">
+            <span>📁</span>
+            <span>Projects</span>
+        </a>
+        <a href="/document" class="sidebar-item active">
+            <span>📄</span>
+            <span>Documents</span>
+        </a>
+        <a href="/chat" class="sidebar-item">
+            <span>💬</span>
+            <span>Chat</span>
+        </a>
+        <a href="/settings" class="sidebar-item">
+            <span>⚙️</span>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Page Header -->
+        <div class="documents-page-header">
+            <div class="page-title-section">
+                <h1>Documents</h1>
+                <p class="page-subtitle">Upload, manage and organize your legal documents</p>
+            </div>
+            <div class="documents-controls">
+                <button class="btn" onclick="openUploadModal()">📤 Upload Document</button>
+            </div>
+        </div>
+
+        <!-- Document Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDocuments">24</div>
+                <div class="stat-label">Total Documents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="recentUploads">8</div>
+                <div class="stat-label">Recent Uploads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingReview">3</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="storageUsed">2.4GB</div>
+                <div class="stat-label">Storage Used</div>
+            </div>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" onclick="openUploadModal()" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">
+                <h3>Drag and drop documents here</h3>
+                <p>or click to browse and upload files</p>
+                <div class="file-types">Supported formats: PDF, DOCX, XLSX, TXT, JPG, PNG, GIF, WEBP, SVG (Max 25MB)</div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="documents-filters">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search documents..." id="searchDocuments">
+            </div>
+            
+            <select class="filter-select" id="projectFilter">
+                <option value="">All Projects</option>
+                <option value="Vendor Onboarding">Vendor Onboarding</option>
+                <option value="Client NDA">Client NDA</option>
+                <option value="Employment Contracts">Employment Contracts</option>
+                <option value="Service Agreement">Service Agreement</option>
+            </select>
+            
+            <select class="filter-select" id="typeFilter">
+                <option value="">All Types</option>
+                <option value="PDF">PDF</option>
+                <option value="DOCX">Word Document</option>
+                <option value="XLSX">Spreadsheet</option>
+                <option value="TXT">Text File</option>
+            </select>
+        </div>
+
+        <!-- Documents Grid -->
+        <div class="documents-grid" id="documentsGrid">
+            <!-- Sample Documents -->
+            <div class="document-card">
+                <div class="document-icon document-pdf">📄</div>
+                <div class="document-name">ACME_Service_Level_Agreement.pdf</div>
+                <div class="document-project">Vendor Onboarding - ACME</div>
+                <div class="document-meta">
+                    <span>2.4 MB</span>
+                    <span>2 days ago</span>
+                </div>
+                <div class="document-actions">
+                    <button class="action-btn primary">View</button>
+                    <button class="action-btn">Download</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-icon document-pdf">📄</div>
+                <div class="document-name">BetaCorp_NDA_Final.pdf</div>
+                <div class="document-project">Client NDA - BetaCorp</div>
+                <div class="document-meta">
+                    <span>1.8 MB</span>
+                    <span>5 days ago</span>
+                </div>
+                <div class="document-actions">
+                    <button class="action-btn primary">View</button>
+                    <button class="action-btn">Download</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-icon document-docx">📝</div>
+                <div class="document-name">Employee_Contract_Template.docx</div>
+                <div class="document-project">Employment Contracts</div>
+                <div class="document-meta">
+                    <span>456 KB</span>
+                    <span>1 week ago</span>
+                </div>
+                <div class="document-actions">
+                    <button class="action-btn primary">Edit</button>
+                    <button class="action-btn">Download</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-icon document-xlsx">📊</div>
+                <div class="document-name">Vendor_Compliance_Checklist.xlsx</div>
+                <div class="document-project">Vendor Onboarding - ACME</div>
+                <div class="document-meta">
+                    <span>234 KB</span>
+                    <span>1 week ago</span>
+                </div>
+                <div class="document-actions">
+                    <button class="action-btn primary">Open</button>
+                    <button class="action-btn">Download</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-icon document-pdf">📄</div>
+                <div class="document-name">Service_Terms_Updated_v2.pdf</div>
+                <div class="document-project">Service Agreement</div>
+                <div class="document-meta">
+                    <span>3.2 MB</span>
+                    <span>2 weeks ago</span>
+                </div>
+                <div class="document-actions">
+                    <button class="action-btn primary">View</button>
+                    <button class="action-btn">Download</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
+
+            <div class="document-card">
+                <div class="document-icon document-pdf">📄</div>
+                <div class="document-name">Legal_Requirements_Summary.pdf</div>
+                <div class="document-project">Employment Contracts</div>
+                <div class="document-meta">
+                    <span>1.1 MB</span>
+                    <span>3 weeks ago</span>
+                </div>
+                <div class="document-actions">
+                    <button class="action-btn primary">View</button>
+                    <button class="action-btn">Download</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay upload-modal" id="uploadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Upload Document</h3>
+            </div>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label class="form-label">Select Files</label>
+                    <div class="file-upload-area" onclick="document.getElementById('documentFiles').click()">
+                        <div class="file-upload-icon">📁</div>
+                        <div class="file-upload-text">
+                            <strong>Click to select files</strong> or drag and drop<br>
+                            Documents: PDF, DOCX, XLSX, TXT<br>
+                            Images: JPG, PNG, GIF, WEBP, SVG<br>
+                            Max 25MB per file
+                        </div>
+                        <input type="file" id="documentFiles" multiple accept=".pdf,.docx,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.webp,.svg" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="linkedProject">Link to Project</label>
+                    <select id="linkedProject" class="form-select">
+                        <option value="">Select Project </option>
+                        <option value="1">Vendor Onboarding - ACME</option>
+                        <option value="2">Client NDA - BetaCorp</option>
+                        <option value="3">Employment Contracts</option>
+                        <option value="4">Service Agreement</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="documentTags">Document Name</label>
+                    <input type="text" id="documentTags" class="form-input" placeholder="Enter tags separated by commas">
+                </div>
+
+                <div class="upload-progress" id="uploadProgressContainer" style="display: none;">
+                    <div class="progress-content">
+                        <div class="progress-header">
+                            <div class="spinner"></div>
+                            <div class="progress-text">
+                                <span class="upload-message" id="uploadMessage">Uploading...</span>
+                                <span class="upload-percentage" id="uploadPercentage">0%</span>
+                            </div>
+                        </div>
+                        <div class="upload-progress-bar-container">
+                            <div class="upload-progress-bar" id="progressBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeUploadModal()">Cancel</button>
+                    <button type="submit" class="btn">Upload Documents</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">Contract Mitra</h3>
+                <p class="footer-text">Your intelligent contract management solution powered by AI.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/project">Projects</a></li>
+                    <li><a href="/document">Documents</a></li>
+                    <li><a href="/chat">AI Chat</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Connect</h4>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/contractmitra/" class="social-link" title="Instagram" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61581035338307" class="social-link" title="Facebook" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/contract-mitra-846a27384/" class="social-link" title="LinkedIn" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://x.com/ContractMitra" class="social-link" title="X" aria-label="X (Twitter)">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 Contract Mitra. All rights reserved.</p>
+            <p>Made with ❤️ for better contract management</p>
+        </div>
+    </footer>
+
+    <script src="/js/document.js"></script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Contract Mitra</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/project.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="logo">Contract Mitra</div>
+        <div class="nav-right">
+            <button class="notification-btn">🔔</button>
+            
+            <!-- User Menu with Dropdown -->
+            <div class="user-menu">
+                <button class="user-dropdown" onclick="toggleUserMenu()">
+                    <span id="userNameDisplay">User</span> ▼
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div class="user-dropdown-menu" id="userDropdownMenu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-details">
+                            <div class="user-name" id="userFullName">User Name</div>
+                            <div class="user-email" id="userEmail">user@example.com</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="/settings" class="dropdown-item">👤 Profile</a>
+                    <a href="/settings" class="dropdown-item">⚙️ Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item logout-item" onclick="handleLogout(event)">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Toggle (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-item active">
+            <span>📊</span>
+            <span class="sidebar-text">Dashboard</span>
+        </a>
+        <a href="/project" class="sidebar-item">
+            <span>📁</span>
+            <span class="sidebar-text">Projects</span>
+        </a>
+        <a href="/document" class="sidebar-item">
+            <span>📄</span>
+            <span class="sidebar-text">Documents</span>
+        </a>
+        <a href="/chat" class="sidebar-item">
+            <span>💬</span>
+            <span class="sidebar-text">Chat</span>
+        </a>
+        <a href="/settings" class="sidebar-item">
+            <span>⚙️</span>
+            <span class="sidebar-text">Settings</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="dashboard-view active">
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -20px; right: -20px; font-size: 100px; opacity: 0.15;">📊</div>
+                    <div style="position: relative; z-index: 2;">
+                        <div style="font-size: 16px; opacity: 0.9; margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Projects</div>
+                        <div class="kpi-value" id="totalProjects" style="font-size: 50px; font-weight: 800; margin: 0;">0</div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 16px; opacity: 0.85;">
+                            <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                📁 Manage all your projects
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -20px; right: -20px; font-size: 100px; opacity: 0.15;">📄</div>
+                    <div style="position: relative; z-index: 2;">
+                        <div style="font-size: 16px; opacity: 0.9; margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Documents</div>
+                        <div class="kpi-value" id="totalDocuments" style="font-size: 50px; font-weight: 800; margin: 0;">0</div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 16px; opacity: 0.85;">
+                            <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                📤 Upload and organize files
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Recent Projects Section -->
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Recent Projects</h2>
+                            <button class="btn" onclick="openAddProjectModal()">Add Project</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="responsive-table">
+                                <thead>
+                                    <tr>
+                                        <th>Project Name</th>
+                                        <th>Department</th>
+                                        <th>Division</th>
+                                        <th>Documents</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentProjectsTable">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">
+                                            <div style="font-size: 40px; margin-bottom: 10px;">📋</div>
+                                            <div style="font-weight: 500;">Loading projects...</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Documents Section (FIXED - NO VIEW COLUMN) -->
+                    <div class="dashboard-section" style="margin-top: 32px;">
+                        <div class="section-header">
+                            <h2 class="section-title">Recent Documents</h2>
+                            <button class="btn" onclick="openAddDocumentModal()">📤 Add Document</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="responsive-table">
+                                <thead>
+                                    <tr>
+                                        <th>Document Name</th>
+                                        <th>Project</th>
+                                        <th>Type</th>
+                                        <th>Size</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentDocumentsTable">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">
+                                            <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
+                                            <div style="font-weight: 500;">Loading documents...</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Projects Panel -->
+                <div class="dashboard-section projects-panel">
+                    <div class="section-header">
+                        <h2 class="section-title">Projects</h2>
+                    </div>
+                    <div class="project-list" id="dashboardProjectList">
+                        <div style="text-align: center; color: #64748b; padding: 30px;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">📁</div>
+                            <div style="font-weight: 500;">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Project Modal -->
+    <div class="modal-overlay" id="addProjectModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Project</h3>
+                <button class="modal-close" onclick="closeAddProjectModal()">×</button>
+            </div>
+            <form id="projectForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="projectName">Project Name *</label>
+                        <input type="text" id="projectName" name="projectName" class="form-input" placeholder="Enter project name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="departmentName">Department *</label>
+                        <select id="departmentName" name="departmentName" class="form-select" required>
+                            <option value="">Select Department</option>
+                            <option value="Legal">Legal</option>
+                            <option value="HR">HR</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Finance">Finance</option>
+                            <option value="IT">IT</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="divisionName">Division *</label>
+                        <input type="text" id="divisionName" name="divisionName" class="form-input" placeholder="Enter division name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="status">Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea id="description" name="description" class="form-textarea" placeholder="Enter project description"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeAddProjectModal()">Cancel</button>
+                    <button type="submit" class="btn">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Document Modal -->
+    <div class="modal-overlay" id="addDocumentModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">📤 Upload Document</h3>
+                <button class="modal-close" onclick="closeAddDocumentModal()">×</button>
+            </div>
+            <form id="documentForm">
+                <!-- File Upload Group (shown for new upload) -->
+                <div id="fileUploadGroup">
+                    <div class="form-group">
+                        <label class="form-label" for="documentFile">Select File *</label>
+                        <input type="file" id="documentFile" name="documentFile" class="form-input" accept=".pdf,.doc,.docx,.txt">
+                        <small style="color: #64748b; font-size: 12px;">Supported: PDF, DOC, DOCX, TXT (Max: 25MB)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="documentProject">Link to Project *</label>
+                        <select id="documentProject" name="documentProject" class="form-select">
+                            <option value="">Select Project</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="documentName">Document Name (Optional)</label>
+                        <input type="text" id="documentName" name="documentName" class="form-input" placeholder="Leave blank to use filename">
+                    </div>
+                </div>
+
+                <!-- Edit Document Fields (shown for editing) -->
+                <div id="editDocumentFields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="editDocumentName">Document Name *</label>
+                        <input type="text" id="editDocumentName" name="editDocumentName" class="form-input" placeholder="Enter document name">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="editDocumentProject">Project *</label>
+                        <select id="editDocumentProject" name="editDocumentProject" class="form-select">
+                            <option value="">Select Project</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="uploadProgress" style="display: none; margin: 20px 0;">
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="uploadProgressBar" style="background: #2563eb; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                    <p id="uploadProgressText" style="text-align: center; margin-top: 8px; color: #64748b; font-size: 14px;">Uploading...</p>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeAddDocumentModal()">Cancel</button>
+                    <button type="submit" class="btn" id="uploadDocBtn">Upload Document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add this after the existing Add/Edit Project Modal -->
+    <div class="modal-overlay upload-modal" id="dashboardUploadModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Upload Document</h3>
+          <button class="modal-close" type="button" onclick="closeUploadModalDashboard()">×</button>
+        </div>
+        <form id="dashboardUploadForm">
+          <div class="form-group">
+            <label class="form-label">Select Files</label>
+            <div class="file-upload-area" onclick="document.getElementById('dashboardDocumentFiles').click()">
+              <div class="file-upload-icon">📁</div>
+              <div class="file-upload-text">
+                <strong>Click to select files</strong> or drag and drop<br/>
+                Documents: PDF, DOCX, XLSX, TXT<br/>
+                Images: JPG, PNG, GIF, WEBP, SVG<br/>
+                Max 25MB per file
+              </div>
+              <input type="file" id="dashboardDocumentFiles" multiple accept=".pdf,.docx,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.webp,.svg" style="display: none;" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dashboardLinkedProject">Link to Project</label>
+            <select id="dashboardLinkedProject" class="form-select" required>
+              <option value="">Select Project (Required)</option>
+              <!-- JS will populate actual project options -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dashboardDocumentName">Document Name</label>
+            <input type="text" id="dashboardDocumentName" class="form-input" placeholder="Enter document name (optional)" />
+          </div>
+          <div class="upload-progress" id="dashboardUploadProgress" style="display: none;">
+            <div class="upload-progress-bar" id="dashboardUploadProgressBar"></div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" onclick="closeUploadModalDashboard()">Cancel</button>
+            <button type="submit" class="btn">Upload Document</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">Contract Mitra</h3>
+                <p class="footer-text">Your intelligent contract management solution powered by AI.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Dashboard</a></li>
+                    <li><a href="/project">Projects</a></li>
+                    <li><a href="/document">Documents</a></li>
+                    <li><a href="/chatbot">AI Chat</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4 class="footer-heading">Connect</h4>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/contractmitra/" class="social-link" title="Instagram" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61581035338307" class="social-link" title="Facebook" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/contract-mitra-846a27384/" class="social-link" title="LinkedIn" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://x.com/ContractMitra" class="social-link" title="X" aria-label="X (Twitter)">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 Contract Mitra. All rights reserved.</p>
+            <p>Made with ❤️ for better contract management</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/script.js"></script>
+    <script src="/js/project.js"></script>
+</body>
+</html>

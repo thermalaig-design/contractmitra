@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Legal Assistant - Contract Mitra</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/chatbot.css">
+    <link rel="stylesheet" href="/css/chatbot-responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="logo">Contract Mitra</div>
+        <div class="nav-right">
+            <button class="notification-btn">🔔</button>
+
+            <!-- User Menu with Dropdown -->
+            <div class="user-menu">
+                <button class="user-dropdown" onclick="toggleUserMenu()">
+                    <span id="userNameDisplay">User</span> ▼
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div class="user-dropdown-menu" id="userDropdownMenu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <div class="user-details">
+                            <div class="user-name" id="userFullName">User Name</div>
+                            <div class="user-email" id="userEmail">user@example.com</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="/settings" class="dropdown-item">👤 Profile</a>
+                    <a href="/settings" class="dropdown-item">⚙️ Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item logout-item" onclick="handleLogout(event)">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar Toggle (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar Overlay (for mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeChatSidebar()"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-item">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="/project" class="sidebar-item">
+            <span>📁</span>
+            <span>Projects</span>
+        </a>
+        <a href="/document" class="sidebar-item">
+            <span>📄</span>
+            <span>Documents</span>
+        </a>
+        <a href="/chat" class="sidebar-item active">
+            <span>💬</span>
+            <span>Chat</span>
+        </a>
+        <a href="/settings" class="sidebar-item">
+            <span>⚙️</span>
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content responsive-main-content" id="mainContent">
+        <div class="chat-page-container">
+            <!-- ✅ NEW: Mobile Dropdown for Quick Actions, History & New Chat -->
+            <div class="mobile-chat-controls">
+                <button class="mobile-sidebar-toggle" onclick="toggleChatSidebar()">
+                    <span>☰</span>
+                </button>
+                
+                <select class="mobile-chat-dropdown" id="mobileChatDropdown" onchange="handleMobileDropdownChange(this.value)">
+                    <option value="">📱 Menu</option>
+                    <option value="new">✨ New Conversation</option>
+                    <option value="history">📜 Chat History</option>
+                    <option value="quick">⚡ Quick Actions</option>
+                </select>
+            </div>
+
+            <!-- Chat Sidebar - DYNAMIC VERSION -->
+            <div class="chat-sidebar" id="chatSidebar">
+                <div class="chat-sidebar-header">
+                    <button class="new-chat-btn" onclick="startNewChat()">
+                        <span>✨</span>
+                        <span>New Conversation</span>
+                    </button>
+                    <div class="sidebar-tabs">
+                        <button id="tabHistory" class="sidebar-tab active" onclick="showSidebarTab('history')">
+                            Chat History
+                        </button>
+                        <button id="tabQuick" class="sidebar-tab" onclick="showSidebarTab('quick')">
+                            Quick Actions
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ✅ System Prompts Section (Loaded Dynamically from Supabase) -->
+                <div id="quickActionsSection" class="system-prompts-section" style="display:none;">
+                    <div class="system-prompts-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div class="system-prompts-list" id="quickActionsContainer">
+                        <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">
+                            Loading quick actions...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ Events Section -->
+                <div class="events-section" id="eventsSection" style="display: none;">
+                    <div class="events-header">
+                        <h3 style="font-size: 14px; color: #6b7280; margin: 16px 16px 8px 16px;">Project Events</h3>
+                    </div>
+                    <div class="events-list" id="eventsList"></div>
+                </div>
+                
+                <!-- ✅ Chat History Section -->
+                <div id="chatHistorySection" class="chat-history-section">
+                    <div class="chat-history-header">
+                        <h3>Chat History</h3>
+                        <div class="chat-history-actions">
+                            <button class="save-chat-btn" onclick="saveCurrentChat()">💾</button>
+                            <button class="search-history-btn" onclick="toggleHistorySearch()">🔍</button>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-history-search" id="chatHistorySearch" style="display: none;">
+                        <input type="text" id="historySearchInput" placeholder="Search..." 
+                               oninput="searchChatHistory()"/>
+                    </div>
+
+                    <div class="chat-history-list" id="chatHistoryList">
+                        <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">
+                            Loading chat history...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="chat-header-content">
+                        <div class="chat-header-left">
+                            <h1 class="chat-header-title">AI Legal Assistant</h1>
+                            <p class="chat-header-subtitle">Get expert guidance on contracts, compliance, and legal documents</p>
+                        </div>
+                        <div class="chat-header-right">
+                            <div class="project-filter">
+                                <label>Project Context:</label>
+                                <button class="project-select-btn" id="projectSelectBtn" onclick="openProjectFilter()">
+                                    <span id="selectedProjectText">General Legal Advice</span>
+                                    <span class="dropdown-arrow">▼</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+                    <!-- Drag and Drop Overlay -->
+                    <div class="drag-drop-overlay" id="dragDropOverlay">
+                        <div class="drag-drop-content">
+                            <div class="drag-drop-icon">📁</div>
+                            <div class="drag-drop-text">Drop documents here to analyze</div>
+                            <div class="drag-drop-subtitle">PDF, DOCX, TXT files up to 10MB</div>
+                        </div>
+                    </div>
+
+                    <!-- Welcome Screen -->
+                    <div class="welcome-screen" id="welcomeScreen">
+                        <div class="welcome-icon">🤖</div>
+                        <h2 class="welcome-title" id="welcomeTitle">Hello! I'm your AI Legal Assistant</h2>
+                        <p class="welcome-subtitle">I can help you analyze contracts, review legal documents, ensure compliance, and answer legal questions. What would you like to work on today?</p>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <button class="attachment-btn" id="attachmentBtn" onclick="triggerFileUpload()">📎</button>
+                        <textarea class="chat-input" id="chatInput" placeholder="Ask me about contracts, legal documents, compliance... or upload documents to analyze" rows="1"></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                            <span>➤</span>
+                        </button>
+                    </div>
+                    <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.doc" style="display: none;" />
+                    <div class="file-upload-info">
+                        <small>Supported: PDF, DOCX, TXT • Max 25MB per file</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ✅ Project Filter Modal -->
+    <div class="project-filter-modal" id="projectFilterModal">
+        <div class="project-filter-content">
+            <div class="project-filter-header">
+                <h3>Select Project Context</h3>
+                <button class="close-btn" onclick="closeProjectFilter()">×</button>
+            </div>
+
+            <div class="project-filter-body">
+                <div class="filter-search-only">
+                    <input type="text" id="projectSearchInput" placeholder="Search projects..." oninput="filterProjects()" />
+                </div>
+
+                <div class="project-results-simple">
+                    <div id="projectListContainer" class="project-list-simple">
+                        <h3>My Projects</h3>
+                        <div id="filteredProjects"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-filter-footer">
+                <button class="btn btn-outline" onclick="closeProjectFilter()">Cancel</button>
+                <button class="btn" onclick="applyProjectSelection()">Apply Selection</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ==================== MOBILE CHAT CONTROLS ==================== */
+        .mobile-chat-controls {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-chat-controls {
+                display: flex;
+                gap: 12px;
+                padding: 12px 16px;
+                background: white;
+                border-bottom: 1px solid #e5e7eb;
+                position: sticky;
+                top: 64px;
+                z-index: 997;
+                align-items: center;
+            }
+
+            .mobile-sidebar-toggle {
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 10px 14px;
+                font-size: 18px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            .mobile-sidebar-toggle:hover {
+                background: #f8fafc;
+                border-color: #2563eb;
+            }
+
+            .mobile-sidebar-toggle:active {
+                transform: scale(0.95);
+            }
+
+            .mobile-chat-dropdown {
+                flex: 1;
+                padding: 12px 16px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                background: white;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                color: #1e293b;
+            }
+
+            .mobile-chat-dropdown:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            }
+
+            /* Hide original mobile toggles */
+            .mobile-toggles {
+                display: none !important;
+            }
+
+            /* Adjust chat main margin */
+            .chat-main {
+                margin-top: 0 !important;
+            }
+
+            /* Chat sidebar adjustments */
+            .chat-sidebar {
+                position: fixed;
+                left: -100%;
+                top: 64px;
+                width: 85%;
+                max-width: 320px;
+                height: calc(100vh - 64px);
+                z-index: 1000;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+                overflow-y: auto;
+            }
+
+            .chat-sidebar.active {
+                left: 0;
+            }
+
+            /* Overlay */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+                backdrop-filter: blur(2px);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            /* Prevent body scroll when sidebar open */
+            body.sidebar-open {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+            }
+        }
+
+        /* Small screens - full width sidebar */
+        @media (max-width: 480px) {
+            .chat-sidebar {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+
+    <script>
+        // Mobile dropdown handler
+        function handleMobileDropdownChange(value) {
+            const dropdown = document.getElementById('mobileChatDropdown');
+            
+            if (value === 'new') {
+                startNewChat();
+            } else if (value === 'history') {
+                toggleChatSidebar();
+                setTimeout(() => {
+                    showSidebarTab('history');
+                }, 100);
+            } else if (value === 'quick') {
+                toggleChatSidebar();
+                setTimeout(() => {
+                    showSidebarTab('quick');
+                }, 100);
+            }
+            
+            // Reset dropdown
+            dropdown.value = '';
+        }
+
+        // Toggle chat sidebar for mobile
+        function toggleChatSidebar() {
+            const chatSidebar = document.getElementById('chatSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+            
+            if (chatSidebar && overlay) {
+                const isActive = chatSidebar.classList.contains('active');
+                
+                if (isActive) {
+                    chatSidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    body.classList.remove('sidebar-open');
+                } else {
+                    chatSidebar.classList.add('active');
+                    overlay.classList.add('active');
+                    body.classList.add('sidebar-open');
+                }
+            }
+        }
+
+        // Close chat sidebar
+        function closeChatSidebar() {
+            const chatSidebar = document.getElementById('chatSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+            
+            if (chatSidebar) chatSidebar.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
+            body.classList.remove('sidebar-open');
+        }
+
+        // Auto-close on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeChatSidebar();
+            }
+        });
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                closeChatSidebar();
+            }
+        });
+    </script>
+
+    <script src="/js/chatbot.js"></script>
+    <script src="/js/quick_actions.js"></script>
+    
+</body>
+</html>
