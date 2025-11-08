@@ -73,7 +73,7 @@ app.get('/auth/callback', (req, res) => {
 
 // Dashboard page (login ke baad yahan aana hai)
 app.get('/dashboard', (req, res) => {
-  res.render('dashboard'); // views/dashboard.ejs
+  res.render('index'); // views/dashboard.ejs
 });
 
 // 404 handler
