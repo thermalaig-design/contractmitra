@@ -1,0 +1,41 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/documentai": "^9.5.0",
+    "@google-cloud/storage": "^7.17.2",
+    "@google-cloud/vision": "^5.3.4",
+    "@qdrant/js-client-rest": "^1.15.1",
+    "@supabase/supabase-js": "^2.75.0",
+    "canvas": "^3.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "form-data": "^4.0.4",
+    "mammoth": "^1.11.0",
+    "multer": "^2.0.2",
+    "node-fetch": "^2.7.0",
+    "openai": "^6.3.0",
+    "pdf-image": "^2.0.0",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
+    "pdf-poppler": "^0.2.3",
+    "pdf-to-png-converter": "^3.10.0",
+    "pdf2json": "^4.0.0",
+    "pdf2pic": "^3.2.0",
+    "pdfjs-dist": "^5.4.296",
+    "pdfkit": "^0.17.2",
+    "sharp": "^0.34.4",
+    "tmp": "^0.2.5",
+    "xlsx": "^0.18.5"
+  }
+}
