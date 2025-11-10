@@ -60,6 +60,22 @@ app.use('/chat-history', chatHistoryRoutes);
 app.use('/api/profile', profileRoutes);
 // ✅ NEW: Terms & Conditions Route
 
+
+// Login page (jahan Google button hai)
+app.get('/login', (req, res) => {
+  res.render('login'); // views/login.ejs
+});
+
+// OAuth callback page (Google/Supabase se wapas aane ke baad)
+app.get('/auth/callback', (req, res) => {
+  res.render('auth-callback'); // views/auth-callback.ejs
+});
+
+// Dashboard page (login ke baad yahan aana hai)
+app.get('/dashboard', (req, res) => {
+  res.render('index'); // views/dashboard.ejs
+});
+
 // 404 handler
 app.use((req, res) => {
   console.log('404 Not Found:', req.method, req.url);
