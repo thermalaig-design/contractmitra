@@ -1032,7 +1032,7 @@ async function sendMessage() {
     }
 }
 
-// ==================== ADD MESSAGE (UPDATED) ====================
+// ==================== ENHANCED ADD MESSAGE WITH ANIMATION ====================
 function addMessage(text, sender) {
     console.log(`➕ Adding message: ${sender}`);
     
@@ -1041,6 +1041,7 @@ function addMessage(text, sender) {
     
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
+    messageDiv.style.opacity = '0'; // Start invisible
     
     const avatar = sender === 'ai' ? '🤖' : getUserAvatar();
     const time = new Date().toLocaleTimeString('en-US', { 
@@ -1054,14 +1055,23 @@ function addMessage(text, sender) {
         </div>
         <div class="message-content">
             <div class="message-text">${formatMessage(text)}</div>
-            <div class="message-time">${time}</div>
+            <div class="message-time">
+                <span>${sender === 'ai' ? '🤖' : '👤'}</span>
+                <span>${time}</span>
+            </div>
         </div>
     `;
     
     messagesContainer.appendChild(messageDiv);
+    
+    // Trigger animation after a tiny delay
+    setTimeout(() => {
+        messageDiv.style.opacity = '1';
+    }, 10);
+    
     scrollToBottom();
     
-    // ✅ ADD TO MESSAGE HISTORY IN CORRECT FORMAT
+    // Add to message history in correct format
     messageHistory.push({ 
         text: text,
         sender: sender,
@@ -1072,7 +1082,37 @@ function addMessage(text, sender) {
     
     console.log(`✅ Message added. Total: ${messageHistory.length}`);
 }
-
+// ==================== FIX BLANK SPACE - ENSURE PROPER CONTAINER HEIGHT ====================
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        // Prevent overscroll blank space
+        chatMessages.style.overscrollBehavior = 'contain';
+        
+        // Monitor content changes and adjust scroll
+        const observer = new MutationObserver(() => {
+            // Only scroll if near bottom
+            const isNearBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 100;
+            if (isNearBottom) {
+                scrollToBottom();
+            }
+        });
+        
+        observer.observe(chatMessages, {
+            childList: true,
+            subtree: true
+        });
+    }
+    
+    // Fix container height calculation
+    const chatMain = document.querySelector('.chat-main');
+    if (chatMain) {
+        chatMain.style.display = 'flex';
+        chatMain.style.flexDirection = 'column';
+        chatMain.style.height = '100%';
+        chatMain.style.overflow = 'hidden';
+    }
+});
 // ==================== SAVE CONVERSATION WITH MESSAGES ====================
 async function saveConversationWithMessages() {
     try {
@@ -1238,18 +1278,20 @@ function formatMessage(text) {
         .replace(/^(\d+)\. (.*)/gm, '<strong>$1.</strong> $2');
 }
 
-// ==================== UI HELPER FUNCTIONS ====================
+// ==================== ENHANCED TYPING INDICATOR ====================
 function showTypingIndicator() {
     isAITyping = true;
     let messagesContainer = document.getElementById('chatMessages');
     if (!messagesContainer) return;
+    
     // Remove existing typing indicator if any (avoid duplicates)
     const old = document.getElementById('typingIndicator');
     if (old) messagesContainer.removeChild(old);
-    // Create new typing indicator div
+    
+    // Create new enhanced typing indicator div
     const indicator = document.createElement('div');
     indicator.id = 'typingIndicator';
-    indicator.className = 'typing-indicator show';
+    indicator.className = 'typing-indicator';
     indicator.innerHTML = `
         <div class="message-avatar">
             <span>🤖</span>
@@ -1261,8 +1303,10 @@ function showTypingIndicator() {
         </div>
     `;
     messagesContainer.appendChild(indicator);
+    
     const sendBtn = document.getElementById('sendBtn');
     if (sendBtn) sendBtn.disabled = true;
+    
     scrollToBottom();
 }
 
@@ -1270,7 +1314,13 @@ function hideTypingIndicator() {
     isAITyping = false;
     let indicator = document.getElementById('typingIndicator');
     if (indicator && indicator.parentNode) {
-        indicator.parentNode.removeChild(indicator);
+        // Add fade out animation before removing
+        indicator.style.animation = 'messageFadeOut 0.3s ease';
+        setTimeout(() => {
+            if (indicator.parentNode) {
+                indicator.parentNode.removeChild(indicator);
+            }
+        }, 300);
     }
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -1278,6 +1328,20 @@ function hideTypingIndicator() {
         sendBtn.disabled = !chatInput.value.trim();
     }
 }
+const fadeOutStyle = document.createElement('style');
+fadeOutStyle.textContent = `
+    @keyframes messageFadeOut {
+        from {
+            opacity: 1;
+            transform: scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    }
+`;
+document.head.appendChild(fadeOutStyle);
 
 function hideWelcomeScreen() {
     const welcomeScreen = document.getElementById('welcomeScreen');
@@ -1286,10 +1350,20 @@ function hideWelcomeScreen() {
     }
 }
 
+// ==================== ENHANCED SCROLL TO BOTTOM ====================
 function scrollToBottom() {
     const messagesContainer = document.getElementById('chatMessages');
     if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Smooth scroll with animation
+        messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: 'smooth'
+        });
+        
+        // Backup: Force scroll after a tiny delay to ensure DOM is updated
+        setTimeout(() => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 100);
     }
 }
 

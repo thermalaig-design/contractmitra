@@ -1161,6 +1161,7 @@ async function updateDocument() {
   }
 }
 
+// ==================== ENHANCED: UPLOAD NEW DOCUMENT FROM DASHBOARD ====================
 async function uploadNewDocument() {
   const fileInput = document.getElementById('documentFile');
   const projectId = document.getElementById('documentProject').value;
@@ -1201,11 +1202,11 @@ async function uploadNewDocument() {
     // Sanitize filename to remove special characters that cause issues with Supabase
     const sanitizedFileName = file.name
       .replace(/[^a-zA-Z0-9._-]/g, '_')
-      .replace(/_{2,}/g, '_') // Replace multiple underscores with single underscore
-      .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+      .replace(/_{2,}/g, '_')
+      .replace(/^_|_$/g, '');
     
     // Create unique filename
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split('.').pop().toLowerCase();
     const fileName = `${currentUserId}/${Date.now()}_${sanitizedFileName}`;
     
     // Upload to Supabase Storage
@@ -1219,7 +1220,7 @@ async function uploadNewDocument() {
     progressBar.style.width = '60%';
     progressText.textContent = 'Saving document info...';
     
-    // Get public URL (safe extraction)
+    // Get public URL
     const publicUrlResult = supabase.storage
       .from('documents')
       .getPublicUrl(fileName);
@@ -1245,24 +1246,82 @@ async function uploadNewDocument() {
     
     if (dbError) throw dbError;
     
+    // ✅ ENHANCED: Extract text based on file type
+    console.log('📄 Starting text extraction for Qdrant...');
+    await new Promise(resolve => setTimeout(resolve, 8000)); // Wait for file availability
+    
+    let extractedContent = '';
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(fileExt);
+    const isExtractable = ['pdf', 'docx', 'doc', 'xlsx', 'xls', 'txt'].includes(fileExt);
+    
+    if (isExtractable || isImage) {
+      try {
+        console.log(`📖 Extracting text from ${fileExt.toUpperCase()}...`);
+        
+        let retries = 5;
+        let lastError = null;
+        
+        while (retries > 0 && extractedContent.length === 0) {
+          try {
+            console.log(`   Attempt ${6 - retries}/5...`);
+            
+            if (fileExt === 'pdf') {
+              // Try regular PDF extraction first
+              extractedContent = await extractTextFromDocument(publicUrl, fileExt);
+              
+              // If looks like OCR failed, try GCS-based OCR
+              if (extractedContent && (extractedContent.includes('OCR failed') || extractedContent.includes('Scanned PDF processed'))) {
+                console.log('   ⚠️ Regular extraction had issues, trying GCS-based OCR...');
+                const result = await extractTextFromDocumentWithGCS(publicUrl, fileExt, file.name);
+                extractedContent = result.text;
+              }
+            } else if (isImage) {
+              // For images, use image extraction
+              extractedContent = await extractTextFromDocument(publicUrl, fileExt);
+            } else {
+              // For other documents (DOCX, XLSX, TXT)
+              extractedContent = await extractTextFromDocument(publicUrl, fileExt);
+            }
+            
+            if (extractedContent && extractedContent.length > 0) {
+              console.log(`✅ Extracted ${extractedContent.length} characters`);
+              break;
+            } else {
+              console.warn(`⚠️ Extraction returned empty (${retries} retries left)`);
+              retries--;
+              if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, 3000));
+              }
+            }
+          } catch (err) {
+            lastError = err;
+            console.error(`❌ Extraction error (${retries} retries left):`, err.message);
+            retries--;
+            if (retries > 0) {
+              await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+          }
+        }
+        
+        if (extractedContent.length === 0) {
+          console.error(`❌ Failed to extract text from ${file.name} after 5 attempts`);
+          if (lastError) console.error('   Last error:', lastError.message);
+          showMessage(`⚠️ Could not extract text from ${file.name}`, 'warning');
+        }
+      } catch (extractError) {
+        console.error('❌ Text extraction error:', extractError);
+      }
+    }
+    
     // Save to Qdrant
     try {
-      // Extract text from document for Qdrant
-      let extractedContent = '';
-      const fileExt = file.name.split('.').pop();
-      if (publicUrl && ['pdf', 'docx', 'doc', 'xlsx', 'xls', 'txt'].includes(fileExt.toLowerCase())) {
-        console.log('📄 Extracting text for Qdrant...');
-        extractedContent = await extractTextFromDocument(publicUrl, fileExt);
-      }
-      
-      // Save to Qdrant
       await saveToQdrant(
         savedDoc.id,
         file.name,
         extractedContent,
         projectId,
         publicUrl,
-        false // isImage
+        isImage
       );
       console.log('✅ Saved to Qdrant');
     } catch (qdrantError) {
@@ -1276,7 +1335,7 @@ async function uploadNewDocument() {
       showMessage('✅ Document uploaded successfully!', 'success');
       closeAddDocumentModal();
       await loadDocuments();
-      await loadProjects(); // Reload to recalculate counts
+      await loadProjects();
     }, 500);
     
   } catch (error) {
@@ -1288,7 +1347,6 @@ async function uploadNewDocument() {
   }
 }
 
-// ==================== HELPER FUNCTIONS ====================
 // ==================== EXTRACT TEXT FROM DOCUMENT ====================
 async function extractTextFromDocument(documentUrl, documentType) {
   try {

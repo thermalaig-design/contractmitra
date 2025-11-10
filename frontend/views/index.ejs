@@ -233,107 +233,112 @@
     </div>
 
     <!-- Add/Edit Document Modal -->
-    <div class="modal-overlay" id="addDocumentModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">📤 Upload Document</h3>
-                <button class="modal-close" onclick="closeAddDocumentModal()">×</button>
-            </div>
-            <form id="documentForm">
-                <!-- File Upload Group (shown for new upload) -->
-                <div id="fileUploadGroup">
-                    <div class="form-group">
-                        <label class="form-label" for="documentFile">Select File *</label>
-                        <input type="file" id="documentFile" name="documentFile" class="form-input" accept=".pdf,.doc,.docx,.txt">
-                        <small style="color: #64748b; font-size: 12px;">Supported: PDF, DOC, DOCX, TXT (Max: 25MB)</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="documentProject">Link to Project *</label>
-                        <select id="documentProject" name="documentProject" class="form-select">
-                            <option value="">Select Project</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="documentName">Document Name (Optional)</label>
-                        <input type="text" id="documentName" name="documentName" class="form-input" placeholder="Leave blank to use filename">
-                    </div>
-                </div>
-
-                <!-- Edit Document Fields (shown for editing) -->
-                <div id="editDocumentFields" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label" for="editDocumentName">Document Name *</label>
-                        <input type="text" id="editDocumentName" name="editDocumentName" class="form-input" placeholder="Enter document name">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="editDocumentProject">Project *</label>
-                        <select id="editDocumentProject" name="editDocumentProject" class="form-select">
-                            <option value="">Select Project</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="uploadProgress" style="display: none; margin: 20px 0;">
-                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div id="uploadProgressBar" style="background: #2563eb; height: 100%; width: 0%; transition: width 0.3s;"></div>
-                    </div>
-                    <p id="uploadProgressText" style="text-align: center; margin-top: 8px; color: #64748b; font-size: 14px;">Uploading...</p>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeAddDocumentModal()">Cancel</button>
-                    <button type="submit" class="btn" id="uploadDocBtn">Upload Document</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Add this after the existing Add/Edit Project Modal -->
-    <div class="modal-overlay upload-modal" id="dashboardUploadModal">
-      <div class="modal">
+<div class="modal-overlay" id="addDocumentModal">
+    <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title">Upload Document</h3>
-          <button class="modal-close" type="button" onclick="closeUploadModalDashboard()">×</button>
+            <h3 class="modal-title">📤 Upload Document</h3>
+            <button class="modal-close" onclick="closeAddDocumentModal()">×</button>
+        </div>
+        <form id="documentForm">
+            <!-- File Upload Group (shown for new upload) -->
+            <div id="fileUploadGroup">
+                <div class="form-group">
+                    <label class="form-label" for="documentFile">Select File *</label>
+                    <input type="file" id="documentFile" name="documentFile" class="form-input" 
+                           accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.webp,.svg">
+                    <small style="color: #64748b; font-size: 12px;">
+                        📄 Documents: PDF, DOC, DOCX, TXT, XLSX, XLS<br>
+                        🖼️ Images: JPG, PNG, GIF, WEBP, SVG (Max: 25MB)
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="documentProject">Link to Project *</label>
+                    <select id="documentProject" name="documentProject" class="form-select" required>
+                        <option value="">Select Project</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="documentName">Document Name (Optional)</label>
+                    <input type="text" id="documentName" name="documentName" class="form-input" placeholder="Leave blank to use filename">
+                </div>
+            </div>
+
+            <!-- Edit Document Fields (shown for editing) -->
+            <div id="editDocumentFields" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="editDocumentName">Document Name *</label>
+                    <input type="text" id="editDocumentName" name="editDocumentName" class="form-input" placeholder="Enter document name">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editDocumentProject">Project *</label>
+                    <select id="editDocumentProject" name="editDocumentProject" class="form-select">
+                        <option value="">Select Project</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="uploadProgress" style="display: none; margin: 20px 0;">
+                <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div id="uploadProgressBar" style="background: #2563eb; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                </div>
+                <p id="uploadProgressText" style="text-align: center; margin-top: 8px; color: #64748b; font-size: 14px;">Uploading...</p>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeAddDocumentModal()">Cancel</button>
+                <button type="submit" class="btn" id="uploadDocBtn">Upload Document</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    
+  <!-- Dashboard Upload Modal (Second Button) -->
+<div class="modal-overlay upload-modal" id="dashboardUploadModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Upload Document</h3>
+            <button class="modal-close" type="button" onclick="closeUploadModalDashboard()">×</button>
         </div>
         <form id="dashboardUploadForm">
-          <div class="form-group">
-            <label class="form-label">Select Files</label>
-            <div class="file-upload-area" onclick="document.getElementById('dashboardDocumentFiles').click()">
-              <div class="file-upload-icon">📁</div>
-              <div class="file-upload-text">
-                <strong>Click to select files</strong> or drag and drop<br/>
-                Documents: PDF, DOCX, XLSX, TXT<br/>
-                Images: JPG, PNG, GIF, WEBP, SVG<br/>
-                Max 25MB per file
-              </div>
-              <input type="file" id="dashboardDocumentFiles" multiple accept=".pdf,.docx,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.webp,.svg" style="display: none;" />
+            <div class="form-group">
+                <label class="form-label">Select Files</label>
+                <div class="file-upload-area" onclick="document.getElementById('dashboardDocumentFiles').click()">
+                    <div class="file-upload-icon">📁</div>
+                    <div class="file-upload-text">
+                        <strong>Click to select files</strong> or drag and drop<br/>
+                        📄 Documents: PDF, DOCX, XLSX, TXT<br/>
+                        🖼️ Images: JPG, PNG, GIF, WEBP, SVG<br/>
+                        Max 25MB per file
+                    </div>
+                    <input type="file" id="dashboardDocumentFiles" multiple 
+                           accept=".pdf,.docx,.xlsx,.txt,.doc,.xls,.jpg,.jpeg,.png,.gif,.webp,.svg" 
+                           style="display: none;" />
+                </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="dashboardLinkedProject">Link to Project</label>
-            <select id="dashboardLinkedProject" class="form-select" required>
-              <option value="">Select Project (Required)</option>
-              <!-- JS will populate actual project options -->
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="dashboardDocumentName">Document Name</label>
-            <input type="text" id="dashboardDocumentName" class="form-input" placeholder="Enter document name (optional)" />
-          </div>
-          <div class="upload-progress" id="dashboardUploadProgress" style="display: none;">
-            <div class="upload-progress-bar" id="dashboardUploadProgressBar"></div>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn btn-outline" onclick="closeUploadModalDashboard()">Cancel</button>
-            <button type="submit" class="btn">Upload Document</button>
-          </div>
+            <div class="form-group">
+                <label class="form-label" for="dashboardLinkedProject">Link to Project *</label>
+                <select id="dashboardLinkedProject" class="form-select" required>
+                    <option value="">Select Project (Required)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="dashboardDocumentName">Document Name (Optional)</label>
+                <input type="text" id="dashboardDocumentName" class="form-input" placeholder="Enter document name (optional)" />
+            </div>
+            <div class="upload-progress" id="dashboardUploadProgress" style="display: none;">
+                <div class="upload-progress-bar" id="dashboardUploadProgressBar"></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeUploadModalDashboard()">Cancel</button>
+                <button type="submit" class="btn">Upload Document</button>
+            </div>
         </form>
-      </div>
     </div>
-
+</div>
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
@@ -380,5 +385,243 @@
     <!-- Scripts -->
     <script src="/js/script.js"></script>
     <script src="/js/project.js"></script>
+    <script>
+        // ==================== DASHBOARD UPLOAD MODAL FUNCTIONS ====================
+
+function openUploadModalDashboard() {
+  if (projects.length === 0) {
+    showMessage('⚠️ Please create a project first before uploading documents', 'error');
+    setTimeout(() => {
+      if (confirm('No projects found. Would you like to create one now?')) {
+        window.location.href = '/project';
+      }
+    }, 500);
+    return;
+  }
+
+  document.getElementById('dashboardUploadModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  
+  // Populate project dropdown
+  const dropdown = document.getElementById('dashboardLinkedProject');
+  if (dropdown) {
+    dropdown.innerHTML = '<option value="">⚠️ Select Project (Required)</option>' +
+      projects.map(project => `
+        <option value="${project.id}">${escapeHtml(project.project_name)}</option>
+      `).join('');
+    dropdown.style.borderColor = '#dc2626';
+  }
+}
+
+function closeUploadModalDashboard() {
+  document.getElementById('dashboardUploadModal').classList.remove('show');
+  document.body.style.overflow = 'auto';
+  document.getElementById('dashboardUploadForm').reset();
+
+  const dropdown = document.getElementById('dashboardLinkedProject');
+  if (dropdown) {
+    dropdown.style.borderColor = '#dc2626';
+  }
+
+  document.querySelector('#dashboardUploadModal .file-upload-text').innerHTML = `
+    <strong>Click to select files</strong> or drag and drop<br>
+    📄 Documents: PDF, DOCX, XLSX, TXT<br>
+    🖼️ Images: JPG, PNG, GIF, WEBP, SVG<br>
+    Max 25MB per file
+  `;
+  
+  // Hide progress bar
+  const progressDiv = document.getElementById('dashboardUploadProgress');
+  if (progressDiv) progressDiv.style.display = 'none';
+}
+
+// ==================== DASHBOARD UPLOAD FORM HANDLER ====================
+document.addEventListener('DOMContentLoaded', function () {
+  const dashboardFileInput = document.getElementById('dashboardDocumentFiles');
+  if (dashboardFileInput) {
+    dashboardFileInput.addEventListener('change', function (e) {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        const fileNames = files.map(f => {
+          const ext = f.name.split('.').pop().toLowerCase();
+          const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+          const icon = isImage ? '🖼️' : '📄';
+          return `${icon} ${f.name}`;
+        }).join('<br>');
+        
+        document.querySelector('#dashboardUploadModal .file-upload-text').innerHTML =
+          `<strong>${files.length} file(s) selected:</strong><br>${fileNames}`;
+      }
+    });
+  }
+
+  const dashboardUploadForm = document.getElementById('dashboardUploadForm');
+  if (dashboardUploadForm) {
+    dashboardUploadForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const fileInput = document.getElementById('dashboardDocumentFiles');
+      const files = fileInput.files;
+      
+      if (files.length === 0) {
+        showMessage('⚠️ Please select at least one file', 'error');
+        return;
+      }
+
+      const projectId = document.getElementById('dashboardLinkedProject').value;
+      if (!projectId) {
+        showMessage('⚠️ Please select a project before uploading', 'error');
+        const dropdown = document.getElementById('dashboardLinkedProject');
+        dropdown.style.borderColor = '#dc2626';
+        dropdown.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.1)';
+        dropdown.focus();
+        return;
+      }
+
+      const progressBar = document.getElementById('dashboardUploadProgressBar');
+      const progressContainer = document.getElementById('dashboardUploadProgress');
+
+      progressContainer.style.display = 'block';
+      if (progressBar) progressBar.style.width = '0%';
+
+      try {
+        let successCount = 0;
+        let failCount = 0;
+        const totalFiles = files.length;
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const baseProgress = (i / totalFiles) * 100;
+          
+          if (progressBar) {
+            progressBar.style.width = `${baseProgress}%`;
+          }
+
+          if (file.size > 25 * 1024 * 1024) {
+            showMessage(`${file.name} is too large (max 25MB)`, 'error');
+            failCount++;
+            continue;
+          }
+
+          try {
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const sanitizedFileName = file.name
+              .replace(/[^a-zA-Z0-9._-]/g, '_')
+              .replace(/_{2,}/g, '_')
+              .replace(/^_|_$/g, '');
+            
+            const sanitizedFullFileName = `${currentUserId}/${Date.now()}_${sanitizedFileName}`;
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(fileExt);
+            const isExtractable = ['pdf', 'docx', 'doc', 'xlsx', 'xls', 'txt'].includes(fileExt);
+
+            console.log(`📤 Uploading: ${file.name} (${fileExt})`);
+
+            // Upload to Supabase
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('documents')
+              .upload(sanitizedFullFileName, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+              .from('documents')
+              .getPublicUrl(sanitizedFullFileName);
+
+            console.log('✅ File uploaded to storage');
+            await new Promise(resolve => setTimeout(resolve, 8000));
+
+            // Extract text
+            let extractedContent = '';
+            if (isExtractable || isImage) {
+              let retries = 5;
+              while (retries > 0 && extractedContent.length === 0) {
+                try {
+                  if (fileExt === 'pdf') {
+                    extractedContent = await extractTextFromDocument(publicUrl, fileExt);
+                    if (extractedContent && (extractedContent.includes('OCR failed') || extractedContent.includes('Scanned PDF'))) {
+                      const result = await extractTextFromDocumentWithGCS(publicUrl, fileExt, file.name);
+                      extractedContent = result.text;
+                    }
+                  } else {
+                    extractedContent = await extractTextFromDocument(publicUrl, fileExt);
+                  }
+                  
+                  if (extractedContent && extractedContent.length > 0) {
+                    console.log(`✅ Extracted ${extractedContent.length} characters`);
+                    break;
+                  }
+                  retries--;
+                  if (retries > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+                } catch (err) {
+                  retries--;
+                  if (retries > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+              }
+            }
+
+            // Save to database
+            const documentData = {
+              user_id: currentUserId,
+              project_id: projectId,
+              document_name: file.name,
+              document_url: publicUrl,
+              document_type: fileExt.toUpperCase(),
+              file_size: file.size,
+              uploaded_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+
+            const { data: savedDoc, error: dbError } = await supabase
+              .from('documents')
+              .insert([documentData])
+              .select()
+              .single();
+
+            if (dbError) throw dbError;
+
+            // Save to Qdrant
+            await saveToQdrant(
+              savedDoc.id,
+              file.name,
+              extractedContent,
+              projectId,
+              publicUrl,
+              isImage
+            );
+
+            successCount++;
+            const progress = ((i + 1) / totalFiles) * 100;
+            if (progressBar) progressBar.style.width = `${progress}%`;
+
+          } catch (fileError) {
+            console.error(`Error uploading ${file.name}:`, fileError);
+            failCount++;
+          }
+        }
+
+        if (successCount > 0) {
+          showMessage(`✅ Successfully uploaded ${successCount} file(s)!`, 'success');
+        }
+        if (failCount > 0) {
+          showMessage(`⚠️ Failed to upload ${failCount} file(s)`, 'error');
+        }
+
+        closeUploadModalDashboard();
+        await loadDocuments();
+        await loadProjects();
+
+      } catch (error) {
+        console.error('Upload error:', error);
+        showMessage('Upload failed: ' + error.message, 'error');
+      } finally {
+        setTimeout(() => {
+          progressContainer.style.display = 'none';
+          if (progressBar) progressBar.style.width = '0%';
+        }, 1500);
+      }
+    });
+  }
+});
+    </script>
 </body>
 </html>

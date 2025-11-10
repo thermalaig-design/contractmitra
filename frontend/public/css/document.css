@@ -676,6 +676,7 @@
     border: 1px solid rgba(102, 126, 234, 0.15);
     border-radius: 10px;
     padding: 14px 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .progress-header {
@@ -766,6 +767,19 @@
 @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
+}
+
+/* Enhanced progress bar for better visual feedback */
+.upload-progress-bar.processing {
+    background: linear-gradient(90deg, #f59e0b, #f97316);
+}
+
+.upload-progress-bar.complete {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.upload-progress-bar.error {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
 }
 
 /* Mobile responsive */

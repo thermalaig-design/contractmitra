@@ -754,7 +754,7 @@ document.addEventListener('DOMContentLoaded', function () {
           const currentFileNum = i + 1;
           
           // Update progress message
-          uploadMessage.textContent = `Uploading file ${currentFileNum} of ${totalFiles}: ${file.name}`;
+          uploadMessage.textContent = `Preparing file ${currentFileNum} of ${totalFiles}: ${file.name}`;
           
           // Calculate and update progress
           const baseProgress = (i / totalFiles) * 100;
@@ -801,104 +801,140 @@ document.addEventListener('DOMContentLoaded', function () {
             const sanitizedFullFileName = `${currentUserId}/${Date.now()}_${sanitizedFileName}`;
 
             console.log(`📤 Uploading: ${file.name} (${fileExt})`);
-// Step 1: Upload to Supabase Storage
-const { data: uploadData, error: uploadError } = await supabase.storage
-  .from('documents')
-  .upload(sanitizedFullFileName, file);
+            
+            // Enhanced progress tracking for upload
+            uploadMessage.textContent = `Uploading file ${currentFileNum} of ${totalFiles}: ${file.name}`;
+            
+            // Simulate progress during upload (since Supabase doesn't provide real progress)
+            const simulateUploadProgress = async () => {
+              for (let p = 0; p <= 70; p += 5) {
+                const progress = ((i + (p / 100)) / totalFiles) * 100;
+                if (progressBar) {
+                  progressBar.style.width = `${progress}%`;
+                }
+                if (uploadPercentage) {
+                  uploadPercentage.textContent = `${Math.round(progress)}%`;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+              }
+            };
+            
+            // Start simulating progress
+            const progressSimulation = simulateUploadProgress();
+            
+            // Step 1: Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('documents')
+              .upload(sanitizedFullFileName, file);
 
-if (uploadError) throw uploadError;
+            // Wait for progress simulation to complete
+            await progressSimulation;
 
-const { data: { publicUrl } } = supabase.storage
-  .from('documents')
-  .getPublicUrl(sanitizedFullFileName);
+            if (uploadError) throw uploadError;
 
-console.log('✅ File uploaded to storage');
+            const { data: { publicUrl } } = supabase.storage
+              .from('documents')
+              .getPublicUrl(sanitizedFullFileName);
 
-// ⚠️ CRITICAL: Wait longer for file to be accessible
-console.log('⏳ Waiting for file to be fully available...');
-await new Promise(resolve => setTimeout(resolve, 8000)); // 👈 CHANGED: 5 seconds instead of 2
+            console.log('✅ File uploaded to storage');
 
-console.log('✅ Starting text extraction...');
-// âœ… Step 2: Extract text content for supported formats
-// ✅ Step 2: Extract text content for supported formats
-let extractedContent = '';
-let extractedImages = []; // To store any images generated during OCR
+            // Update progress after upload
+            const uploadCompleteProgress = ((i + 0.8) / totalFiles) * 100;
+            if (progressBar) {
+              progressBar.style.width = `${uploadCompleteProgress}%`;
+            }
+            if (uploadPercentage) {
+              uploadPercentage.textContent = `${Math.round(uploadCompleteProgress)}%`;
+            }
+            uploadMessage.textContent = `Processing file ${currentFileNum} of ${totalFiles}: ${file.name}`;
 
-if (isExtractable) {
-  console.log(`📖 Extracting text from ${fileExt.toUpperCase()}...`);
-  
-  // 👇 ENHANCED: Try extraction with MORE retries and longer delays
-  let retries = 5; // Increased from 3
-  let lastError = null;
-  
-  while (retries > 0 && extractedContent.length === 0) {
-    try {
-      console.log(`   Attempt ${6 - retries}/5...`);
-      console.log(`   🔗 Fetching from: ${publicUrl.substring(0, 100)}...`);  // ✅ ADD THIS
-      
-      // First try regular text extraction which correctly handles readable vs scanned PDFs
-      if (fileExt === 'pdf') {
-        // Try regular PDF extraction first (this will use pdf-parse for readable PDFs and OCR only for scanned PDFs)
-        extractedContent = await extractTextFromDocument(publicUrl, fileExt);
-        
-        // Check if we got meaningful content or if it looks like OCR failed
-        if (extractedContent && extractedContent.length > 0) {
-          // If the content looks like an OCR failure message, try the GCS-based OCR
-          if (extractedContent.includes('OCR failed') || extractedContent.includes('Scanned PDF processed')) {
-            console.log('   ⚠️ Regular extraction had issues, trying GCS-based OCR...');
-            const result = await extractTextFromDocumentWithGCS(publicUrl, fileExt, file.name);
-            extractedContent = result.text;
-            extractedImages = result.images || []; // Get any images that were saved
-          } else {
-            console.log('   ✅ Regular extraction successful, no need for OCR');
-          }
-        } else {
-          // If no content was extracted, try GCS-based OCR
-          console.log('   ⚠️ No content extracted, trying GCS-based OCR...');
-          const result = await extractTextFromDocumentWithGCS(publicUrl, fileExt, file.name);
-          extractedContent = result.text;
-          extractedImages = result.images || []; // Get any images that were saved
-        }
-      } else {
-        extractedContent = await extractTextFromDocument(publicUrl, fileExt);
-      }
-      
-      if (extractedContent && extractedContent.length > 0) {
-        console.log(`✅ Extracted ${extractedContent.length} characters`);
-        console.log(`   Preview: ${extractedContent.substring(0, 200)}...`);
-        // If images were extracted, log them
-        if (extractedImages.length > 0) {
-          console.log(`✅ ${extractedImages.length} images generated during OCR:`);
-          extractedImages.forEach(img => console.log(`   - ${img.url}`));
-        }
-        break;
-      } else {
-        console.warn(`⚠️ Extraction returned empty (${retries} retries left)`);
-        retries--;
-        if (retries > 0) {
-          console.log(`   Waiting 3 seconds before retry...`);
-          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay between retries
-        }
-      }
-    } catch (err) {
-      lastError = err;
-      console.error(`❌ Extraction error (${retries} retries left):`, err.message);
-      retries--;
-      if (retries > 0) {
-        console.log(`   Waiting 3 seconds before retry...`);
-        await new Promise(resolve => setTimeout(resolve, 3000));
-      }
-    }
-  }
-  
-  if (extractedContent.length === 0) {
-    const errorMsg = `❌ Failed to extract text from ${file.name} after 5 attempts`;
-    console.error(errorMsg);
-    if (lastError) console.error('   Last error:', lastError.message);
-    showMessage(`⚠️ Could not extract text from ${file.name}`, 'warning');
-  }
+            // ⚠️ CRITICAL: Wait longer for file to be accessible
+            console.log('⏳ Waiting for file to be fully available...');
+            await new Promise(resolve => setTimeout(resolve, 8000)); // 👈 CHANGED: 5 seconds instead of 2
 
-}
+            console.log('✅ Starting text extraction...');
+            // ✅ Step 2: Extract text content for supported formats
+            let extractedContent = '';
+            let extractedImages = []; // To store any images generated during OCR
+
+            if (isExtractable) {
+              console.log(`📖 Extracting text from ${fileExt.toUpperCase()}...`);
+              
+              // Update progress message
+              uploadMessage.textContent = `Extracting text from file ${currentFileNum} of ${totalFiles}: ${file.name}`;
+              
+              // 👇 ENHANCED: Try extraction with MORE retries and longer delays
+              let retries = 5; // Increased from 3
+              let lastError = null;
+              
+              while (retries > 0 && extractedContent.length === 0) {
+                try {
+                  console.log(`   Attempt ${6 - retries}/5...`);
+                  console.log(`   🔗 Fetching from: ${publicUrl.substring(0, 100)}...`);  // ✅ ADD THIS
+                  
+                  // First try regular text extraction which correctly handles readable vs scanned PDFs
+                  if (fileExt === 'pdf') {
+                    // Try regular PDF extraction first (this will use pdf-parse for readable PDFs and OCR only for scanned PDFs)
+                    extractedContent = await extractTextFromDocument(publicUrl, fileExt);
+                    
+                    // Check if we got meaningful content or if it looks like OCR failed
+                    if (extractedContent && extractedContent.length > 0) {
+                      // If the content looks like an OCR failure message, try the GCS-based OCR
+                      if (extractedContent.includes('OCR failed') || extractedContent.includes('Scanned PDF processed')) {
+                        console.log('   ⚠️ Regular extraction had issues, trying GCS-based OCR...');
+                        const result = await extractTextFromDocumentWithGCS(publicUrl, fileExt, file.name);
+                        extractedContent = result.text;
+                        extractedImages = result.images || []; // Get any images that were saved
+                      } else {
+                        console.log('   ✅ Regular extraction successful, no need for OCR');
+                      }
+                    } else {
+                      // If no content was extracted, try GCS-based OCR
+                      console.log('   ⚠️ No content extracted, trying GCS-based OCR...');
+                      const result = await extractTextFromDocumentWithGCS(publicUrl, fileExt, file.name);
+                      extractedContent = result.text;
+                      extractedImages = result.images || []; // Get any images that were saved
+                    }
+                  } else {
+                    extractedContent = await extractTextFromDocument(publicUrl, fileExt);
+                  }
+                  
+                  if (extractedContent && extractedContent.length > 0) {
+                    console.log(`✅ Extracted ${extractedContent.length} characters`);
+                    console.log(`   Preview: ${extractedContent.substring(0, 200)}...`);
+                    // If images were extracted, log them
+                    if (extractedImages.length > 0) {
+                      console.log(`✅ ${extractedImages.length} images generated during OCR:`);
+                      extractedImages.forEach(img => console.log(`   - ${img.url}`));
+                    }
+                    break;
+                  } else {
+                    console.warn(`⚠️ Extraction returned empty (${retries} retries left)`);
+                    retries--;
+                    if (retries > 0) {
+                      console.log(`   Waiting 3 seconds before retry...`);
+                      await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay between retries
+                    }
+                  }
+                } catch (err) {
+                  lastError = err;
+                  console.error(`❌ Extraction error (${retries} retries left):`, err.message);
+                  retries--;
+                  if (retries > 0) {
+                    console.log(`   Waiting 3 seconds before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                  }
+                }
+              }
+              
+              if (extractedContent.length === 0) {
+                const errorMsg = `❌ Failed to extract text from ${file.name} after 5 attempts`;
+                console.error(errorMsg);
+                if (lastError) console.error('   Last error:', lastError.message);
+                showMessage(`⚠️ Could not extract text from ${file.name}`, 'warning');
+              }
+
+            }
             // Step 3: Save to Supabase Database
             const documentData = {
               user_id: currentUserId,
@@ -911,6 +947,9 @@ if (isExtractable) {
               updated_at: new Date().toISOString()
             };
 
+            // Update progress message
+            uploadMessage.textContent = `Saving file ${currentFileNum} of ${totalFiles}: ${file.name}`;
+            
             const { data: savedDoc, error: dbError } = await supabase
               .from('documents')
               .insert([documentData])
@@ -923,6 +962,10 @@ if (isExtractable) {
 
             // ✅ Step 4: Save to Qdrant WITH EXTRACTED CONTENT
             console.log('💾 Saving to Qdrant with content...');
+            
+            // Update progress message
+            uploadMessage.textContent = `Indexing file ${currentFileNum} of ${totalFiles}: ${file.name}`;
+            
             const qdrantSuccess = await saveToQdrant(
               savedDoc.id,
               file.name,
