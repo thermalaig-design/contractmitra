@@ -1031,57 +1031,213 @@ async function sendMessage() {
         addMessage('I apologize, but I\'m having trouble connecting to the server.', 'ai');
     }
 }
+// ===== Helpers: sanitize / strip markdown / escape =====
+function stripMarkdownBold(text) {
+    if (text === null || text === undefined) return '';
+    // Remove **bold** and surrounding whitespace, keep inner content
+    try {
+        return String(text).replace(/\*\*(.*?)\*\*/g, '$1').trim();
+    } catch (e) {
+        return String(text);
+    }
+}
+function escapeForCell(text) {
+    if (text === null || text === undefined) return '';
+    // convert to string and strip bold markers first
+    let t = stripMarkdownBold(text);
+    // preserve simple line breaks to <br>
+    t = t.replace(/\r\n|\r|\n/g, '<br>');
+    // escape HTML special chars (but keep <br>)
+    t = t
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    // revert escaped <br> back to real tag
+    t = t.replaceAll('&lt;br&gt;', '<br>');
+    return t;
+}
+// ===== Render HTML table from array-of-objects (prettier + header blank rules) =====
+function renderTableFromArray(arr) {
+    if (!Array.isArray(arr) || arr.length === 0) {
+        return '<div class="ai-table-empty">No table data</div>';
+    }
 
-// ==================== ENHANCED ADD MESSAGE WITH ANIMATION ====================
+    // Union of keys across rows (preserve insertion order roughly)
+    const colsSet = new Set();
+    arr.forEach(row => {
+        if (row && typeof row === 'object' && !Array.isArray(row)) {
+            Object.keys(row).forEach(k => colsSet.add(k));
+        }
+    });
+    const cols = Array.from(colsSet);
+
+    // Build table HTML
+    let html = `<div class="ai-table-wrap">
+      <table class="ai-table" role="table" aria-label="AI generated table">
+        <thead><tr>`;
+
+    // Header: if header looks like raw markdown-bold or is empty => leave blank
+    cols.forEach(col => {
+        const raw = String(col || '').trim();
+        const looksLikeBoldOnly = /^\*\*.*\*\*$/.test(raw);
+        const display = looksLikeBoldOnly || raw === '' ? '' : stripMarkdownBold(raw);
+        html += `<th scope="col">${escapeForCell(display)}</th>`;
+    });
+
+    html += `</tr></thead><tbody>`;
+
+    arr.forEach((row, rIdx) => {
+        html += `<tr>`;
+        cols.forEach((c, cIdx) => {
+            let v = (row && Object.prototype.hasOwnProperty.call(row, c)) ? row[c] : '';
+            // If entire cell looks like markdown bold, strip it; if object/array, stringify nicely
+            if (typeof v === 'object' && v !== null) {
+                try { v = JSON.stringify(v); } catch(e) { v = String(v); }
+            }
+            const cellHtml = escapeForCell(v);
+            html += `<td data-col="${escapeForCell(c)}">${cellHtml}</td>`;
+        });
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    return html;
+}
+
+// ===== Loose JSON array parser (unchanged, tolerant) =====
+function tryParseJSONArray(text) {
+    if (!text || typeof text !== 'string') return null;
+    let t = text.trim();
+    t = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+    t = t.replace(/^\s*JSON\s*[:\-]\s*/i, '');
+    try {
+        const parsed = JSON.parse(t);
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.table)) return parsed.table;
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+
+// ===== Basic markdown table parser (keeps behavior but strips ** markers) =====
+function tryParseMarkdownTable(text) {
+    if (!text || typeof text !== 'string') return null;
+    const lines = text.trim().split('\n').map(l => l.replace(/\r/g,'').trim());
+    if (lines.length < 2) return null;
+
+    // find header pipe line and next line being separator (---)
+    const headerIdx = lines.findIndex((ln, i) => ln.includes('|') && i+1 < lines.length && /^[:\-\s|]+$/.test(lines[i+1].replace(/\s+/g,'')));
+    if (headerIdx === -1) return null;
+
+    const headerLine = lines[headerIdx];
+    const rows = [];
+    for (let i = headerIdx; i < lines.length; i++) {
+        if (!lines[i] || !lines[i].includes('|')) break;
+        rows.push(lines[i]);
+    }
+    if (rows.length < 2) return null;
+
+    const cols = headerLine.split('|').map(c => c.trim()).filter((v,idx)=> !(v==='' && (idx===0 || idx===headerLine.split('|').length-1)));
+    const bodyLines = rows.slice(2); // skip header + separator
+
+    // Build HTML (use same styles)
+    let html = '<div class="ai-table-wrap"><table class="ai-table"><thead><tr>';
+    cols.forEach(col => {
+        // if header is just markdown bold, leave blank
+        const raw = col.trim();
+        const looksLikeBoldOnly = /^\*\*.*\*\*$/.test(raw);
+        const display = looksLikeBoldOnly || raw === '' ? '' : stripMarkdownBold(raw);
+        html += `<th scope="col">${escapeForCell(display)}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+    bodyLines.forEach(line => {
+        const cells = line.split('|').map(c => c.trim()).filter((v,idx)=> !(v==='' && (idx===0 || idx===line.split('|').length-1)));
+        html += '<tr>';
+        cols.forEach((_,ci) => {
+            const rawCell = cells[ci] !== undefined ? cells[ci] : '';
+            html += `<td>${escapeForCell(rawCell)}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    return html;
+}
+// ===== REPLACEMENT addMessage =====
 function addMessage(text, sender) {
     console.log(`➕ Adding message: ${sender}`);
-    
+
     const messagesContainer = document.getElementById('chatMessages');
     if (!messagesContainer) return;
-    
+
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
     messageDiv.style.opacity = '0'; // Start invisible
-    
+
     const avatar = sender === 'ai' ? '🤖' : getUserAvatar();
-    const time = new Date().toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+    const time = new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
     });
-    
+
+    let messageContentHtml = '';
+    // If AI message, try to detect JSON table or markdown table
+    if (sender === 'ai') {
+        // 1) Try JSON array
+        const parsedArray = tryParseJSONArray(text);
+        if (parsedArray) {
+            messageContentHtml = renderTableFromArray(parsedArray);
+        } else {
+            // 2) Try markdown table
+            const mdTableHtml = tryParseMarkdownTable(text);
+            if (mdTableHtml) {
+                messageContentHtml = mdTableHtml;
+            } else {
+                // 3) Fallback to formatted text (allow limited HTML)
+                messageContentHtml = `<div class="message-text">${formatMessage(text)}</div>`;
+            }
+        }
+    } else {
+        // user messages: keep previous behavior (escaped & formatted)
+        messageContentHtml = `<div class="message-text">${formatMessage(text)}</div>`;
+    }
+
     messageDiv.innerHTML = `
         <div class="message-avatar">
             <span>${avatar}</span>
         </div>
         <div class="message-content">
-            <div class="message-text">${formatMessage(text)}</div>
+            ${messageContentHtml}
             <div class="message-time">
                 <span>${sender === 'ai' ? '🤖' : '👤'}</span>
                 <span>${time}</span>
             </div>
         </div>
     `;
-    
+
     messagesContainer.appendChild(messageDiv);
-    
+
     // Trigger animation after a tiny delay
     setTimeout(() => {
         messageDiv.style.opacity = '1';
     }, 10);
-    
+
     scrollToBottom();
-    
+
     // Add to message history in correct format
-    messageHistory.push({ 
+    messageHistory.push({
         text: text,
         sender: sender,
         time: time,
         role: sender === 'ai' ? 'assistant' : 'user',
         content: text
     });
-    
+
     console.log(`✅ Message added. Total: ${messageHistory.length}`);
 }
+
 // ==================== FIX BLANK SPACE - ENSURE PROPER CONTAINER HEIGHT ====================
 document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
