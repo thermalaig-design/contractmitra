@@ -124,7 +124,9 @@ function buildSystemPrompt(projectData, documentContext, documentsSearched, coll
     documentCount = 0,
     relevantDocumentsCount = 0
   } = projectData;
-let systemPrompt = `
+  
+  // Changed from const to let since we're modifying it later
+  let systemPrompt = `
 You are a dual-specialized AI Assistant trained in:
 - Indian civil law, contract law, and government procurement (CPWD, PWD, GCC, etc.)
 - Technical evaluation of project terms, deliverables, BOQs, SoRs, and construction/service agreements
