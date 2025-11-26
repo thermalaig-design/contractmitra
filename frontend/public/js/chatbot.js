@@ -200,6 +200,7 @@ console.log('✅ Sidebar toggle functions loaded');
 // ==================== CONFIGURATION ====================
 // Use relative path to support deployment on the same origin
 const BACKEND_URL = '';
+const TEMPLATE_API_BASE = `${BACKEND_URL}/api/templates`;
 
 // ==================== CHAT APPLICATION STATE ====================
 let currentChatId = 1;
@@ -219,9 +220,35 @@ let qdrantDocumentCount = 0; // ✅ NEW: Track Qdrant indexed count
 let currentConversationId = null;
 let isAutoSaveEnabled = true;
 let chatHistoryList = [];
+let isSidebarCollapsed = false;
+let preferredSidebarCollapsed = false;
 // ==================== SUPABASE CONNECTION ====================
 let supabase = null;
 let supabaseAccessToken = null;
+
+function formatDocumentCount(count = 0) {
+    if (!count) return '0 documents';
+    return count === 1 ? '1 document' : `${count} documents`;
+}
+
+function updateProjectContextMeta() {
+    const docCountEl = document.getElementById('projectDocumentCount');
+    if (docCountEl) {
+        docCountEl.textContent = formatDocumentCount(projectDocuments.length || 0);
+    }
+}
+
+function setAssistantStatus(statusText = 'Ready') {
+    const statusEl = document.getElementById('assistantStatusText');
+    if (statusEl) {
+        statusEl.textContent = statusText;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateProjectContextMeta();
+    setAssistantStatus('Ready');
+});
 
 async function waitForSupabase() {
     let attempts = 0;
@@ -529,6 +556,7 @@ async function loadProjectDocuments(projectId) {
     if (!projectId || projectId === 'null') {
         projectDocuments = [];
         qdrantDocumentCount = 0;
+        updateProjectContextMeta();
         return;
     }
 
@@ -547,6 +575,7 @@ async function loadProjectDocuments(projectId) {
 
         projectDocuments = data || [];
         console.log(`✅ Loaded ${projectDocuments.length} documents from Supabase`);
+        updateProjectContextMeta();
         
         // Log document names
         if (projectDocuments.length > 0) {
@@ -565,6 +594,7 @@ async function loadProjectDocuments(projectId) {
         console.error('Error loading project documents:', error);
         projectDocuments = [];
         qdrantDocumentCount = 0;
+        updateProjectContextMeta();
         return [];
     }
 }
@@ -791,6 +821,7 @@ async function applyProjectSelection() {
     } else {
         projectDocuments = [];
         qdrantDocumentCount = 0;
+        updateProjectContextMeta();
     }
     
     updateProjectContext();
@@ -1031,16 +1062,23 @@ async function sendMessage() {
         addMessage('I apologize, but I\'m having trouble connecting to the server.', 'ai');
     }
 }
-// ===== Helpers: sanitize / strip markdown / escape =====
-function stripMarkdownBold(text) {
-    if (text === null || text === undefined) return '';
-    // Remove **bold** and surrounding whitespace, keep inner content
-    try {
-        return String(text).replace(/\*\*(.*?)\*\*/g, '$1').trim();
-    } catch (e) {
-        return String(text);
-    }
+// ==================== FIXED: stripMarkdown Helper ====================
+function stripMarkdown(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+        .replace(/\*(.*?)\*/g, '$1')     // Remove italic
+        .replace(/__(.*?)__/g, '$1')     // Remove underline
+        .replace(/`(.*?)`/g, '$1')       // Remove code
+        .trim();
 }
+
+// Add the missing stripMarkdownBold function
+function stripMarkdownBold(text) {
+    if (!text) return '';
+    return text.replace(/\*\*(.*?)\*\*/g, '$1');
+}
+
 function escapeForCell(text) {
     if (text === null || text === undefined) return '';
     // convert to string and strip bold markers first
@@ -1166,7 +1204,7 @@ function tryParseMarkdownTable(text) {
     return html;
 }
 // ===== REPLACEMENT addMessage =====
-function addMessage(text, sender) {
+function addMessage(text, sender, existingMessage = null) {
     console.log(`➕ Adding message: ${sender}`);
 
     const messagesContainer = document.getElementById('chatMessages');
@@ -1177,7 +1215,7 @@ function addMessage(text, sender) {
     messageDiv.style.opacity = '0'; // Start invisible
 
     const avatar = sender === 'ai' ? '🤖' : getUserAvatar();
-    const time = new Date().toLocaleTimeString('en-US', {
+    const time = existingMessage?.time || new Date().toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
     });
@@ -1227,13 +1265,22 @@ function addMessage(text, sender) {
     scrollToBottom();
 
     // Add to message history in correct format
-    messageHistory.push({
-        text: text,
-        sender: sender,
-        time: time,
-        role: sender === 'ai' ? 'assistant' : 'user',
-        content: text
-    });
+    if (existingMessage) {
+        // Use existing message properties
+        messageHistory.push(existingMessage);
+    } else {
+        // Create new message object
+        messageHistory.push({
+            text: text,
+            sender: sender,
+            time: time,
+            role: sender === 'ai' ? 'assistant' : 'user',
+            content: text,
+            hasDocuments: false,
+            documentReferences: null,
+            metadata: null
+        });
+    }
 
     console.log(`✅ Message added. Total: ${messageHistory.length}`);
 }
@@ -1268,6 +1315,11 @@ document.addEventListener('DOMContentLoaded', function() {
         chatMain.style.height = '100%';
         chatMain.style.overflow = 'hidden';
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    restoreSidebarCollapsePreference();
+    window.addEventListener('resize', handleSidebarCollapseOnResize);
 });
 // ==================== SAVE CONVERSATION WITH MESSAGES ====================
 async function saveConversationWithMessages() {
@@ -1305,9 +1357,9 @@ async function addMessagesToConversation(conversationId) {
                 userId: currentUser.id,
                 role: msg.role || (msg.sender === 'ai' ? 'assistant' : 'user'),
                 content: msg.content || msg.text,
-                hasDocuments: false,
-                documentReferences: null,
-                metadata: null
+                hasDocuments: msg.hasDocuments || false,
+                documentReferences: msg.documentReferences || null,
+                metadata: msg.metadata || null
             };
             
             const response = await fetch(`${BACKEND_URL}/api/chat-history/conversations/${conversationId}/messages`, {
@@ -1387,9 +1439,9 @@ async function createNewConversationWithMessages() {
         const formattedMessages = messageHistory.map(msg => ({
             role: msg.role || (msg.sender === 'ai' ? 'assistant' : 'user'),
             content: msg.content || msg.text,
-            hasDocuments: false,
-            documentReferences: null,
-            metadata: null
+            hasDocuments: msg.hasDocuments || false,
+            documentReferences: msg.documentReferences || null,
+            metadata: msg.metadata || null
         }));
         
         console.log('📨 Sending', formattedMessages.length, 'messages');
@@ -1437,6 +1489,7 @@ function formatMessage(text) {
 // ==================== ENHANCED TYPING INDICATOR ====================
 function showTypingIndicator() {
     isAITyping = true;
+    setAssistantStatus('Drafting response...');
     let messagesContainer = document.getElementById('chatMessages');
     if (!messagesContainer) return;
     
@@ -1447,15 +1500,15 @@ function showTypingIndicator() {
     // Create new enhanced typing indicator div
     const indicator = document.createElement('div');
     indicator.id = 'typingIndicator';
-    indicator.className = 'typing-indicator';
+    indicator.className = 'message typing-indicator';
     indicator.innerHTML = `
         <div class="message-avatar">
             <span>🤖</span>
         </div>
-        <div class="typing-dots">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
+        <div class="typing-bubble">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
         </div>
     `;
     messagesContainer.appendChild(indicator);
@@ -1483,6 +1536,7 @@ function hideTypingIndicator() {
     if (sendBtn && chatInput) {
         sendBtn.disabled = !chatInput.value.trim();
     }
+    setAssistantStatus('Ready');
 }
 const fadeOutStyle = document.createElement('style');
 fadeOutStyle.textContent = `
@@ -1529,6 +1583,8 @@ function startNewChat() {
     
     currentConversationId = null;
     messageHistory = [];
+    currentGenerationSession = null;
+    generatedParts = [];
     clearChatMessages();
     
     selectedProjectId = null;
@@ -1741,6 +1797,59 @@ function closeChatSidebar() {
         overlay.classList.remove('active');
     }
     document.body.style.overflow = '';
+}
+
+function toggleSidebarCollapse() {
+    preferredSidebarCollapsed = !preferredSidebarCollapsed;
+    saveSidebarCollapsePreference();
+    if (window.innerWidth > 900) {
+        applySidebarCollapseState(preferredSidebarCollapsed);
+    }
+}
+
+function applySidebarCollapseState(state) {
+    const container = document.querySelector('.chat-page-container');
+    const btn = document.getElementById('sidebarCollapseBtn');
+    if (!container) return;
+
+    isSidebarCollapsed = state;
+    container.classList.toggle('sidebar-collapsed', state);
+
+    if (btn) {
+        btn.classList.toggle('collapsed', state);
+        btn.setAttribute('aria-expanded', (!state).toString());
+        btn.title = state ? 'Expand sidebar' : 'Collapse sidebar';
+    }
+}
+
+function saveSidebarCollapsePreference() {
+    try {
+        localStorage.setItem('cm_sidebar_collapsed', preferredSidebarCollapsed ? '1' : '0');
+    } catch (_) {
+        // Ignore storage issues
+    }
+}
+
+function restoreSidebarCollapsePreference() {
+    try {
+        preferredSidebarCollapsed = localStorage.getItem('cm_sidebar_collapsed') === '1';
+    } catch (_) {
+        preferredSidebarCollapsed = false;
+    }
+
+    if (window.innerWidth > 900 && preferredSidebarCollapsed) {
+        applySidebarCollapseState(true);
+    } else {
+        applySidebarCollapseState(false);
+    }
+}
+
+function handleSidebarCollapseOnResize() {
+    if (window.innerWidth <= 900) {
+        applySidebarCollapseState(false);
+    } else {
+        applySidebarCollapseState(preferredSidebarCollapsed);
+    }
 }
 
 
@@ -2045,7 +2154,7 @@ async function saveCurrentChat() {
 }
 
 
-// ==================== LOAD CONVERSATION ====================
+// ==================== FIXED: loadConversation to restore template format ====================
 async function loadConversation(conversationId) {
     try {
         console.log(`📖 Loading conversation: ${conversationId}`);
@@ -2059,8 +2168,6 @@ async function loadConversation(conversationId) {
         const url = `${BACKEND_URL}/api/chat-history/conversations/${conversationId}?userId=${currentUser.id}`;
         const response = await fetch(url, { headers: getAuthHeaders() });
         const data = await response.json();
-        
-        console.log('📦 Response:', data);
         
         if (!data.success) {
             throw new Error(data.error || 'Failed to load');
@@ -2089,25 +2196,46 @@ async function loadConversation(conversationId) {
             
             await loadProjectDocuments(conv.project_id);
             updateProjectContext();
-        } else {
-            selectedProjectId = null;
-            selectedProjectName = null;
-            const selectedProjectText = document.getElementById('selectedProjectText');
-            if (selectedProjectText) {
-                selectedProjectText.textContent = 'General Legal Advice';
-            }
         }
         
-        // Load messages
-        console.log(`💬 Loading ${data.messages.length} messages`);
-        
+        // ✅ FIXED: Load messages with proper formatting
         if (data.messages && data.messages.length > 0) {
             data.messages.forEach((msg) => {
                 let sender = 'user';
                 if (msg.role === 'assistant') sender = 'ai';
-                else if (msg.role === 'user' || msg.role === 'ai') sender = msg.role === 'ai' ? 'ai' : 'user';
+                
                 const content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
-                addMessage(content, sender);
+                
+                // ✅ Check if this is a document part
+                const isDocumentPart = msg.metadata && msg.metadata.isDocumentPart;
+                
+                if (isDocumentPart) {
+                    // Restore as generated part with special formatting
+                    const partData = {
+                        currentPart: msg.metadata.partNumber,
+                        partName: msg.metadata.partName,
+                        message: content,
+                        extractedData: msg.metadata.extractedData,
+                        formattingRules: msg.metadata.formattingRules,
+                        templateName: msg.metadata.templateName
+                    };
+                    addGeneratedPartMessage(partData);
+                } else {
+                    // Regular message
+                    // Create a temporary message object with all properties
+                    const tempMsg = {
+                        text: content,
+                        sender: sender,
+                        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                        role: msg.role || (sender === 'ai' ? 'assistant' : 'user'),
+                        content: content,
+                        hasDocuments: msg.has_documents || false,
+                        documentReferences: msg.document_references || null,
+                        metadata: msg.metadata || null
+                    };
+                    // Display in UI and add to message history
+                    addMessage(content, sender, tempMsg);
+                }
             });
         }
         
@@ -2126,7 +2254,6 @@ async function loadConversation(conversationId) {
         
         scrollToBottom();
         showMessage('✅ Conversation loaded', 'success');
-        console.log(`✅ Loaded ${data.messages.length} messages`);
         
     } catch (error) {
         console.error('❌ Error loading conversation:', error);
@@ -2480,3 +2607,815 @@ window.debugMobileSidebar = function() {
 };
 
 console.log('✅ Mobile chat sidebar functions loaded');
+// ==================== FRONTEND: Add to chatbot.js ====================
+
+// ==================== DOCUMENT GENERATION STATE ====================
+let currentGenerationSession = null;
+let generatedParts = [];
+
+// ==================== DETECT GENERATION REQUEST IN sendMessage ====================
+async function sendMessage() {
+    const chatInput = document.getElementById('chatInput');
+    let message = chatInput.value.trim();
+    
+    if (!message || isAITyping) return;
+    
+    // Add user message to UI
+    addMessage(message, 'user');
+    
+    // Clear input
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    
+    hideWelcomeScreen();
+    showTypingIndicator();
+    
+    try {
+        const requestBody = {
+            message: message,
+            projectId: selectedProjectId !== 'null' ? selectedProjectId : null,
+            projectName: selectedProjectName,
+            department: selectedDepartment,
+            division: selectedDivision,
+            status: selectedStatus,
+            documentCount: projectDocuments.length,
+            conversationHistory: messageHistory.slice(-6)
+        };
+        
+        const response = await fetch(`${BACKEND_URL}/api/chat`, {
+            method: 'POST',
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+        hideTypingIndicator();
+
+        if (data.success) {
+            // ✅ NEW: Check if this is a document generation request
+            if (data.isGenerationRequest) {
+                await handleGenerationResponse(data);
+            } else {
+                // Regular chat response
+                let aiMessage = data.message;
+                
+                if (data.documentsUsed > 0) {
+                    aiMessage += `\n\n---\n📚 **Analysis:** Used ${data.documentsUsed} document(s)`;
+                }
+                
+                addMessage(aiMessage, 'ai');
+            }
+            
+            await saveConversationWithMessages();
+            
+        } else {
+            console.error('AI response error:', data.error);
+            addMessage(data.fallbackMessage || 'I apologize, but I encountered an error.', 'ai');
+        }
+
+    } catch (error) {
+        console.error('Chat API error:', error);
+        hideTypingIndicator();
+        addMessage('I apologize, but I\'m having trouble connecting to the server.', 'ai');
+    }
+}
+
+// ==================== HANDLE GENERATION RESPONSE ====================
+async function handleGenerationResponse(data) {
+    if (data.requiresDocuments) {
+        // Show message asking for documents
+        addMessage(data.message, 'ai');
+        return;
+    }
+    
+    // Initialize generation session if not already started
+    if (!currentGenerationSession) {
+        try {
+            const initResponse = await fetch(`${TEMPLATE_API_BASE}/generate/start`, {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({
+                    userId: currentUser.id,
+                    projectId: selectedProjectId !== 'null' ? selectedProjectId : null,
+                    templateName: data.templateName,
+                    documentTitle: `${data.templateName} - ${new Date().toLocaleDateString()}`
+                })
+            });
+            
+            const initData = await initResponse.json();
+            
+            if (initData.success) {
+                currentGenerationSession = {
+                    documentId: initData.documentId,
+                    templateName: data.templateName,
+                    totalParts: initData.totalParts || data.totalParts || null,
+                    currentPart: 1
+                };
+                generatedParts = [];
+                
+                console.log('✨ Generation session started:', currentGenerationSession);
+            }
+        } catch (error) {
+            console.error('Error starting generation session:', error);
+        }
+    }
+    
+    // Display generated part with special formatting
+    addGeneratedPartMessage(data);
+    addGeneratedPartToHistory(data);
+    
+    // Save part to backend
+    if (currentGenerationSession) {
+        try {
+            await fetch(`${TEMPLATE_API_BASE}/generate/${currentGenerationSession.documentId}/part`, {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({
+                    userId: currentUser.id,
+                    partNumber: data.currentPart,
+                    partContent: data.message,
+                    extractedData: data.extractedData,
+                    userFeedback: 'pending'
+                })
+            });
+        } catch (error) {
+            console.warn('Could not save part:', error);
+        }
+    }
+    
+    // Store/replace part locally at correct index
+    generatedParts[data.currentPart - 1] = {
+        partNumber: data.currentPart,
+        partName: data.partName,
+        content: data.message,
+        extractedData: data.extractedData
+    };
+
+    if (currentGenerationSession) {
+        currentGenerationSession.currentPart = data.currentPart;
+    }
+    
+    // Show next action buttons
+    addPartActionButtons(data);
+}
+
+// ==================== ADD GENERATED PART MESSAGE ====================
+function addGeneratedPartMessage(data) {
+    const messagesContainer = document.getElementById('chatMessages');
+    if (!messagesContainer) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message ai generated-part';
+    
+    const partHeader = `
+        <div class="part-header">
+            <span class="part-badge">Part ${data.currentPart}</span>
+            <span class="part-title">${data.partName}</span>
+        </div>
+    `;
+    
+    const partContent = `
+        <div class="part-content">
+            ${formatGeneratedContent(data.message)}
+        </div>
+    `;
+    
+    const extractedDataInfo = data.extractedData ? `
+        <div class="extracted-data-summary">
+            <details>
+                <summary>📊 Extracted Data (${Object.keys(data.extractedData).length} fields)</summary>
+                <pre>${JSON.stringify(data.extractedData, null, 2)}</pre>
+            </details>
+        </div>
+    ` : '';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <span>📄</span>
+        </div>
+        <div class="message-content">
+            ${partHeader}
+            ${partContent}
+            ${extractedDataInfo}
+            <div class="message-time">
+                <span>📄</span>
+                <span>${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+        </div>
+    `;
+
+    messagesContainer.appendChild(messageDiv);
+    scrollToBottom();
+    
+    // Also add to message history if not already added
+    // This is handled by addGeneratedPartToHistory which is called separately
+}
+
+// ==================== FIXED: addGeneratedPartToHistory ====================
+function addGeneratedPartToHistory(data) {
+    const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    // ✅ FIXED: Store complete part info in metadata
+    messageHistory.push({
+        text: data.message,
+        sender: 'ai',
+        time,
+        role: 'assistant',
+        content: data.message,
+        metadata: {
+            type: 'generated_part',
+            templateName: data.templateName || currentGenerationSession?.templateName || null,
+            partNumber: data.currentPart,
+            partName: data.partName,
+            extractedData: data.extractedData,
+            formattingRules: data.formattingRules,
+            isDocumentPart: true // ✅ Flag for chat history
+        }
+    });
+}
+
+
+// ==================== FORMAT GENERATED CONTENT (FIXED) ====================
+function formatGeneratedContent(content) {
+    if (!content) return '';
+
+    // First, convert markdown tables to HTML
+    let formatted = convertMarkdownTables(content);
+
+    // Apply basic markdown formatting (bold, italic, underline)
+    formatted = formatted
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/__(.*?)__/g, '<u>$1</u>');
+
+    // Convert bullet points
+    formatted = formatted.replace(/^- (.*)/gm, '• $1');
+
+    // Convert newlines to <br>, BUT NOT around tables
+    const lines = formatted.split('\n');
+    const processedLines = [];
+    let inTable = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line.includes('<div class="generated-table-container">')) {
+            inTable = true;
+            // Add line without <br>
+            processedLines.push(line);
+        } else if (line.includes('</div>') && inTable) {
+            inTable = false;
+            processedLines.push(line);
+        } else if (inTable) {
+            // Inside table, no <br>
+            processedLines.push(line);
+        } else if (line) {
+            // Regular text, add <br>
+            processedLines.push(line + '<br>');
+        }
+    }
+
+    formatted = processedLines.join('\n');
+
+    // Clean up excessive <br> tags
+    formatted = formatted
+        .replace(/(<br>\s*){3,}/g, '<br><br>') // Max 2 consecutive breaks
+        .replace(/<br>\s*<div class="generated-table-container">/g, '<div class="generated-table-container">') // No break before table
+        .replace(/<\/div>\s*<br>/g, '</div>'); // No break after table
+
+    return formatted;
+}
+
+
+// ==================== CONVERT MARKDOWN TABLES (FIXED) ====================
+
+// ==================== CONVERT MARKDOWN TABLES (FIXED) ====================
+function convertMarkdownTables(content) {
+    const lines = content.split('\n');
+    const parts = [];
+    let i = 0;
+
+    while (i < lines.length) {
+        const line = lines[i].trim();
+
+        // Detect start of markdown table
+        if (line.startsWith('|') && line.endsWith('|')) {
+            const tableLines = [];
+
+            // Collect all table lines
+            while (i < lines.length) {
+                const tableLine = lines[i].trim();
+                if (!tableLine.startsWith('|')) break;
+                tableLines.push(tableLine);
+                i++;
+            }
+
+            if (tableLines.length > 0) {
+                parts.push(renderMarkdownTable(tableLines));
+            }
+        } else {
+            parts.push(line);
+            i++;
+        }
+    }
+
+    return parts.join('\n');
+}
+
+
+// ==================== FIXED: renderMarkdownTable ====================
+function renderMarkdownTable(tableLines) {
+    if (!tableLines || tableLines.length < 2) return '';
+
+    // Parse table rows - remove leading/trailing pipes
+    const rows = tableLines
+        .map(line => {
+            const cells = line.trim()
+                .replace(/^\||\|$/g, '') // Remove outer pipes
+                .split('|')
+                .map(c => c.trim());
+            return cells;
+        })
+        .filter(cells => cells.length > 0);
+
+    if (rows.length < 2) return '';
+
+    // First row is header
+    const headerCells = rows[0];
+    
+    // Find separator row (contains dashes)
+    let bodyStartIndex = 1;
+    for (let i = 1; i < rows.length; i++) {
+        if (rows[i].every(cell => /^[-:\s]+$/.test(cell))) {
+            bodyStartIndex = i + 1;
+            break;
+        }
+    }
+
+    // Get body rows (skip separator)
+    const bodyRows = rows.slice(bodyStartIndex);
+
+    if (bodyRows.length === 0) return '';
+
+    // Determine column count
+    const columnCount = headerCells.length;
+
+    // ✅ FIXED: Build proper HTML table
+    let html = '<div class="generated-table-container"><table class="generated-table">';
+    
+    // Header
+    html += '<thead><tr>';
+    headerCells.forEach((cell, idx) => {
+        // Clean cell: strip bold markers, escape HTML
+        const cleanCell = stripMarkdown(cell);
+        const align = (idx === 0 || idx === columnCount - 1) ? 'center' : 'left';
+        html += `<th style="text-align: ${align};">${escapeHtml(cleanCell)}</th>`;
+    });
+    html += '</tr></thead>';
+
+    // Body
+    html += '<tbody>';
+    bodyRows.forEach(row => {
+        html += '<tr>';
+        for (let i = 0; i < columnCount; i++) {
+            const cell = row[i] || '';
+            const cleanCell = stripMarkdown(cell);
+            const align = (i === 0 || i === columnCount - 1) ? 'center' : 'left';
+            html += `<td style="text-align: ${align};">${escapeHtml(cleanCell)}</td>`;
+        }
+        html += '</tr>';
+    });
+    html += '</tbody>';
+
+    html += '</table></div>';
+    return html;
+}
+
+// ==================== ESCAPE HTML (HELPER) ====================
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+// ==================== NEW: generatePartialDOCX ====================
+async function generatePartialDOCX() {
+    if (!currentGenerationSession || generatedParts.length === 0) {
+        showMessage('❌ No parts generated yet', 'error');
+        return;
+    }
+    
+    try {
+        showMessage('📝 Generating DOCX with current parts...', 'info');
+        
+        const response = await fetch(`${TEMPLATE_API_BASE}/generate/docx`, {
+            method: 'POST',
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+                documentId: currentGenerationSession.documentId,
+                userId: currentUser.id,
+                parts: generatedParts.filter(p => p != null) // Only non-null parts
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.fileUrl) {
+                const link = document.createElement('a');
+                link.href = data.fileUrl;
+                link.download = data.fileName;
+                link.click();
+            } else if (data.fileData) {
+                const blob = base64ToBlob(data.fileData, data.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = data.fileName || `Section_11_Partial_${Date.now()}.docx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+            
+            showMessage('✅ DOCX downloaded successfully!', 'success');
+        } else {
+            throw new Error(data.error || 'Failed to generate DOCX');
+        }
+        
+    } catch (error) {
+        console.error('Error generating DOCX:', error);
+        showMessage('❌ Failed to generate DOCX file', 'error');
+    }
+}
+
+// ==================== FIXED: addPartActionButtons with DOCX at every part ====================
+function addPartActionButtons(data) {
+    const messagesContainer = document.getElementById('chatMessages');
+    if (!messagesContainer) return;
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'part-actions';
+    
+    // ✅ FIXED: DOCX button available at EVERY part
+    const isLastPart = data.currentPart === currentGenerationSession?.totalParts;
+    
+    actionsDiv.innerHTML = `
+        <div class="action-buttons">
+            ${!isLastPart ? `
+                <button class="btn btn-success" onclick="approvePart(${data.currentPart})">
+                    ✓ Approve & Continue
+                </button>
+            ` : ''}
+            <button class="btn btn-warning" onclick="revisePart(${data.currentPart})">
+                ✏️ Request Revision
+            </button>
+            <button class="btn btn-secondary" onclick="regeneratePart(${data.currentPart})">
+                🔄 Regenerate
+            </button>
+            <button class="btn btn-primary" onclick="generatePartialDOCX()">
+                📥 Download Current DOCX
+            </button>
+        </div>
+        <div class="part-progress">
+            Part ${data.currentPart} of ${currentGenerationSession?.totalParts || '?'}
+            ${isLastPart ? ' • <strong>Complete!</strong>' : ''}
+        </div>
+    `;
+
+    messagesContainer.appendChild(actionsDiv);
+    scrollToBottom();
+}
+// ==================== APPROVE PART ====================
+async function approvePart(partNumber) {
+    console.log('✅ Approving part:', partNumber);
+
+    if (!currentGenerationSession) {
+        showMessage('❌ Unable to continue. Please start the generation process again.', 'error');
+        return;
+    }
+    
+    // Update UI to show approval
+    const actionsDiv = document.querySelector('.part-actions');
+    if (actionsDiv) {
+        actionsDiv.innerHTML = '<div class="approval-message">✓ Part approved, generating next part...</div>';
+    }
+    
+    // Update backend
+    try {
+        await fetch(`${TEMPLATE_API_BASE}/generate/${currentGenerationSession.documentId}/part`, {
+            method: 'POST',
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+                userId: currentUser.id,
+                partNumber: partNumber,
+                partContent: generatedParts[partNumber - 1]?.content,
+                userFeedback: 'approved'
+            })
+        });
+    } catch (error) {
+        console.warn('Could not update part approval:', error);
+    }
+    
+    // Request next part
+    if (currentGenerationSession && partNumber < currentGenerationSession.totalParts) {
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.value = `Generate Part ${partNumber + 1} of ${currentGenerationSession.templateName}`;
+            sendMessage();
+        }
+    } else {
+        // All parts complete
+        showMessage('✅ All parts generated! You can now download the DOCX file.', 'success');
+        
+        if (currentGenerationSession) {
+            await fetch(`${TEMPLATE_API_BASE}/generate/${currentGenerationSession.documentId}/complete`, {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ userId: currentUser.id })
+            });
+        }
+    }
+}
+
+// ==================== REVISE PART ====================
+function revisePart(partNumber) {
+    const feedback = prompt(`What changes would you like to make to Part ${partNumber}?`);
+    if (!feedback) return;
+    
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.value = `Revise Part ${partNumber}: ${feedback}`;
+        sendMessage();
+    }
+}
+
+// ==================== REGENERATE PART ====================
+function regeneratePart(partNumber) {
+    if (!confirm(`Regenerate Part ${partNumber}? This will replace the current content.`)) {
+        return;
+    }
+    
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.value = `Regenerate Part ${partNumber} of ${currentGenerationSession?.templateName}`;
+        sendMessage();
+    }
+}
+
+// ==================== GENERATE DOCX ====================
+async function generateDOCX() {
+    if (!currentGenerationSession) {
+        showMessage('❌ No active generation session', 'error');
+        return;
+    }
+    
+    try {
+        showMessage('📝 Generating DOCX file...', 'info');
+        
+        const response = await fetch(`${TEMPLATE_API_BASE}/generate/docx`, {
+            method: 'POST',
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({
+                documentId: currentGenerationSession.documentId,
+                userId: currentUser.id,
+                parts: generatedParts
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.fileUrl) {
+                const link = document.createElement('a');
+                link.href = data.fileUrl;
+                link.download = data.fileName;
+                link.click();
+            } else if (data.fileData) {
+                const blob = base64ToBlob(data.fileData, data.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = data.fileName || `Section_11_${Date.now()}.docx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                throw new Error('DOCX data not available');
+            }
+            
+            showMessage('✅ DOCX file downloaded successfully!', 'success');
+            currentGenerationSession = null;
+            generatedParts = [];
+        } else {
+            throw new Error(data.error || 'Failed to generate DOCX');
+        }
+        
+    } catch (error) {
+        console.error('Error generating DOCX:', error);
+        showMessage('❌ Failed to generate DOCX file', 'error');
+    }
+}
+
+function base64ToBlob(base64, mimeType) {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
+
+    const sliceSize = 1024;
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        byteArrays.push(new Uint8Array(byteNumbers));
+    }
+
+    return new Blob(byteArrays, { type: mimeType });
+}
+
+// ==================== CSS STYLES FOR GENERATED PARTS ====================
+const generationStyles = `
+<style>
+.generated-part {
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+}
+
+.part-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.part-badge {
+    background: #3b82f6;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.part-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.part-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin: 16px 0;
+    font-family: 'Times New Roman', serif;
+    line-height: 1.8;
+}
+
+.part-content br + br + .generated-table-container,
+.part-content br + .generated-table-container {
+    margin-top: 0;
+}
+
+.generated-table-container {
+    overflow-x: auto;
+    margin: 1px 0 12px;
+}
+
+.generated-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Times New Roman', serif;
+}
+
+.generated-table th,
+.generated-table td {
+    border: 1px solid #94a3b8;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.generated-table th {
+    background: #e2e8f0;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.generated-table tr:nth-child(even) td {
+    background: #f8fafc;
+}
+
+.extracted-data-summary {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.extracted-data-summary details {
+    cursor: pointer;
+}
+
+.extracted-data-summary summary {
+    font-weight: 600;
+    color: #475569;
+}
+
+.extracted-data-summary pre {
+    margin-top: 8px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 11px;
+}
+
+.part-actions {
+    margin: 20px 0;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.action-buttons .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.part-progress {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.approval-message {
+    text-align: center;
+    color: #10b981;
+    font-weight: 600;
+    padding: 12px;
+}
+</style>
+`;
+
+// Inject styles
+document.head.insertAdjacentHTML('beforeend', generationStyles);
+
+console.log('✅ Document generation features loaded');
