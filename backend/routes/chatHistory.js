@@ -462,45 +462,45 @@ router.post('/save-current', async (req, res) => {
       .select()
       .single();
 
-    if (convError) {
-      console.error('❌ Error creating conversation:', convError);
-      return res.status(500).json({ 
-        success: false, 
-        error: convError.message,
-        details: convError.details || convError.hint
-      });
-    }
-
+      if (convError) {
+        console.error('❌ Error creating conversation:', convError);
+        return res.status(500).json({ 
+          success: false, 
+          error: convError.message,
+          details: convError.details || convError.hint
+        });
+      }
     // Add all messages
-    const messagesToInsert = messages.map(msg => ({
-      conversation_id: conversation.id,
-      user_id: userId,
-      role: msg.role,
-      content: msg.content,
-      has_documents: msg.hasDocuments || false,
-      document_references: msg.documentReferences || null,
-      metadata: msg.metadata || null
-    }));
+   // ✅ FIXED: Add all messages WITH metadata
+   const messagesToInsert = messages.map(msg => ({
+    conversation_id: conversation.id,
+    user_id: userId,
+    role: msg.role,
+    content: typeof msg.content === 'object' ? JSON.stringify(msg.content) : msg.content,
+    has_documents: msg.hasDocuments || false,
+    document_references: msg.documentReferences || null,
+    metadata: msg.metadata || null  // ✅ Preserve metadata
+  }));
 
-    const { error: msgError } = await sb
-      .from('chat_messages')
-      .insert(messagesToInsert);
+  const { error: msgError } = await sb
+  .from('chat_messages')
+  .insert(messagesToInsert);
 
-    if (msgError) {
-      console.error('❌ Error inserting messages:', msgError);
-      return res.status(500).json({ 
-        success: false, 
-        error: msgError.message,
-        details: msgError.details || msgError.hint
-      });
-    }
-
-    res.json({ 
-      success: true, 
-      conversation,
-      message: 'Chat saved successfully' 
+  if (msgError) {
+    console.error('❌ Error inserting messages:', msgError);
+    return res.status(500).json({ 
+      success: false, 
+      error: msgError.message,
+      details: msgError.details || msgError.hint
     });
+  }
 
+  res.json({ 
+    success: true, 
+    conversation,
+    message: 'Chat saved successfully' 
+  });
+  
   } catch (error) {
     console.error('❌ Error saving chat:', error);
     res.status(500).json({ 
