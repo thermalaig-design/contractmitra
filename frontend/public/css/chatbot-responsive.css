@@ -20,7 +20,7 @@
     }
     
     .project-select-btn {
-        min-width: 100%;
+        width: 100%;
     }
     
     .chat-messages {
@@ -126,6 +126,20 @@
         padding: 16px;
     }
     
+    .chat-quick-meta {
+        padding: 0 16px 10px;
+        gap: 8px;
+    }
+    
+    .meta-pill {
+        padding: 8px 12px;
+    }
+    
+    .project-context-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
     .chat-header-title {
         font-size: 20px;
     }
@@ -160,24 +174,27 @@
     
     /* ==================== INPUT AREA MOBILE ==================== */
     .chat-input-container {
-        padding: 16px;
+        padding: 12px 14px 14px;
     }
     
     .chat-input-wrapper {
         gap: 8px;
+        padding: 8px 10px;
+        border-radius: 16px;
     }
     
     .attachment-btn,
     .send-btn {
-        width: 42px;
-        height: 42px;
-        font-size: 18px;
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+        border-radius: 10px;
     }
     
     .chat-input {
-        font-size: 14px;
-        padding: 12px 16px;
-        border-radius: 20px;
+        font-size: 13px;
+        padding: 10px;
+        min-height: 44px;
     }
     
     /* ==================== PROJECT MODAL MOBILE ==================== */
