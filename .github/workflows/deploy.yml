@@ -13,11 +13,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Copy all files to VPS
+      - name: Deploy project to VPS (Frontend + Backend)
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 31.97.205.94
+          host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "./frontend/*, ./backend/*"
+          
+          source: "./"
+          
           target: "/root/contractmitra"
+
+          rm: true
+
+          # Ignore unnecessary files
+          # (Optional but recommended)
+          exclude: |
+            .git/
+            node_modules/
+            .github/
+            README.md
+            .env
