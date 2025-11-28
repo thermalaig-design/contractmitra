@@ -12,7 +12,7 @@
     <script src="/js/supabase-config.js"></script>
 </head>
 
-<body>
+<body class="chat-body">
     <!-- Top Navigation -->
     <nav class="top-nav">
         <div class="logo">Contract Mitra</div>
@@ -94,10 +94,16 @@
             <!-- Chat Sidebar - DYNAMIC VERSION -->
             <div class="chat-sidebar" id="chatSidebar">
                 <div class="chat-sidebar-header">
-                    <button class="new-chat-btn" onclick="startNewChat()">
-                        <span>✨</span>
-                        <span>New Conversation</span>
-                    </button>
+                    <div class="sidebar-header-top">
+                        <button class="new-chat-btn" onclick="startNewChat()">
+                            <span>✨</span>
+                            <span>New Conversation</span>
+                        </button>
+                        <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-expanded="true" title="Collapse sidebar">
+                            <span class="collapse-icon collapse-open">⮜</span>
+                            <span class="collapse-icon collapse-closed">⮞</span>
+                        </button>
+                    </div>
                     <div class="sidebar-tabs">
                         <button id="tabHistory" class="sidebar-tab active" onclick="showSidebarTab('history')">
                             Chat History
@@ -153,6 +159,9 @@
 
             <!-- Main Chat Area -->
             <div class="chat-main">
+                <button id="sidebarExpandBtn" class="sidebar-expand-btn" onclick="toggleSidebarCollapse()" title="Show chat tools">
+                    ⮞
+                </button>
                 <div class="chat-header">
                     <div class="chat-header-content">
                         <div class="chat-header-left">
@@ -160,13 +169,17 @@
                             <p class="chat-header-subtitle">Get expert guidance on contracts, compliance, and legal documents</p>
                         </div>
                         <div class="chat-header-right">
-                            <div class="project-filter">
-                                <label>Project Context:</label>
-                                <button class="project-select-btn" id="projectSelectBtn" onclick="openProjectFilter()">
-                                    <span id="selectedProjectText">General Legal Advice</span>
+                            <button class="project-select-btn project-context-bar" id="projectSelectBtn" type="button" onclick="openProjectFilter()">
+                                <div class="project-context-icon">📁</div>
+                                <div class="project-context-details">
+                                    <span class="project-context-label">Project Context</span>
+                                    <span class="project-context-value" id="selectedProjectText">General Legal Advice</span>
+                                </div>
+                                <div class="project-context-meta">
+                                    <span class="project-context-docs" id="projectDocumentCount">0 documents</span>
                                     <span class="dropdown-arrow">▼</span>
-                                </button>
-                            </div>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -238,6 +251,127 @@
         /* ==================== MOBILE CHAT CONTROLS ==================== */
         .mobile-chat-controls {
             display: none;
+        }
+
+        /* ==================== SIDEBAR COLLAPSE ==================== */
+        .sidebar-header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-right: 4px;
+        }
+
+        .sidebar-collapse-btn {
+            border: 1px solid #d1d5db;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #0f172a;
+            min-width: 36px;
+            min-height: 36px;
+        }
+
+        .sidebar-collapse-btn:hover {
+            border-color: #2563eb;
+            background: #e0ecff;
+        }
+
+        .sidebar-collapse-btn .collapse-icon {
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .sidebar-collapse-btn .collapse-closed {
+            display: none;
+        }
+
+        .sidebar-collapse-btn.collapsed .collapse-open {
+            display: none;
+        }
+
+        .sidebar-collapse-btn.collapsed .collapse-closed {
+            display: inline;
+        }
+
+        .chat-main {
+            position: relative;
+        }
+
+        .sidebar-expand-btn {
+            position: absolute;
+            left: 8px;
+            top: 88px;
+            z-index: 10;
+            background: white;
+            border: 1px solid #cbd5f5;
+            border-radius: 999px;
+            padding: 10px 12px;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+            cursor: pointer;
+            display: none;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .sidebar-expand-btn:hover {
+            transform: translateX(2px);
+        }
+
+        .chat-page-container.sidebar-collapsed .sidebar-expand-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-page-container {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            transition: grid-template-columns 0.25s ease;
+        }
+
+        .chat-page-container.sidebar-collapsed {
+            grid-template-columns: 0 minmax(0, 1fr);
+        }
+
+        .chat-sidebar {
+            transition: width 0.25s ease, opacity 0.2s ease;
+        }
+
+        .chat-page-container.sidebar-collapsed .chat-sidebar {
+            width: 0;
+            flex: 0 0 0;
+            min-width: 0;
+            padding: 0;
+            margin: 0;
+            border-right: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .chat-page-container.sidebar-collapsed .chat-sidebar > * {
+            opacity: 0;
+        }
+
+        .chat-page-container.sidebar-collapsed .chat-main {
+            flex: 1 1 100%;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar-collapse-btn {
+                display: none;
+            }
+
+            .chat-page-container.sidebar-collapsed .chat-sidebar {
+                width: 100%;
+                opacity: 1;
+                pointer-events: auto;
+                padding: initial;
+                margin: initial;
+            }
         }
 
         @media (max-width: 768px) {
