@@ -2,36 +2,353 @@
 <html>
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Signing you in…</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-config.js"></script>
+   <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e8eef7 0%, #f5f7fb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .splash-container {
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .logo-box {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, #5b7fe9 0%, #7d9af2 100%);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 40px;
+            box-shadow: 0 20px 60px rgba(91, 127, 233, 0.4);
+            animation: logoAppear 1s ease-out, float 3s ease-in-out 1s infinite;
+        }
+
+        @keyframes logoAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) rotate(-10deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .logo-box svg {
+            width: 70px;
+            height: 70px;
+            stroke: white;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .app-name {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #5b7fe9;
+            margin-bottom: 16px;
+            animation: slideUp 1s ease-out 0.3s backwards;
+            text-shadow: 0 2px 10px rgba(91, 127, 233, 0.2);
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: #6b7894;
+            margin-bottom: 10px;
+            animation: slideUp 1s ease-out 0.5s backwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 50px;
+            animation: slideUp 1s ease-out 0.7s backwards;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            background: #5b7fe9;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite;
+            box-shadow: 0 2px 8px rgba(91, 127, 233, 0.3);
+        }
+
+        .dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+            40% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* Tablet Screens */
+        @media (max-width: 768px) {
+            .app-name {
+                font-size: 3rem;
+            }
+
+            .tagline {
+                font-size: 1.1rem;
+            }
+
+            .logo-box {
+                width: 120px;
+                height: 120px;
+            }
+
+            .logo-box svg {
+                width: 60px;
+                height: 60px;
+            }
+
+            .loading-dots {
+                margin-top: 40px;
+            }
+        }
+
+        /* Mobile Screens */
+        @media (max-width: 480px) {
+            body {
+                padding: 30px 20px;
+            }
+
+            .app-name {
+                font-size: 2.5rem;
+                margin-bottom: 12px;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .logo-box {
+                width: 110px;
+                height: 110px;
+                margin-bottom: 30px;
+                border-radius: 24px;
+            }
+
+            .logo-box svg {
+                width: 55px;
+                height: 55px;
+            }
+
+            .loading-dots {
+                margin-top: 35px;
+                gap: 8px;
+            }
+
+            .dot {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        /* Extra Small Screens */
+        @media (max-width: 360px) {
+            body {
+                padding: 25px 15px;
+            }
+
+            .app-name {
+                font-size: 2.2rem;
+            }
+
+            .tagline {
+                font-size: 0.95rem;
+            }
+
+            .logo-box {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 25px;
+                border-radius: 20px;
+            }
+
+            .logo-box svg {
+                width: 50px;
+                height: 50px;
+            }
+
+            .loading-dots {
+                margin-top: 30px;
+            }
+        }
+
+        /* Landscape Mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 20px;
+            }
+
+            .logo-box {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 20px;
+            }
+
+            .logo-box svg {
+                width: 40px;
+                height: 40px;
+            }
+
+            .app-name {
+                font-size: 2rem;
+                margin-bottom: 8px;
+            }
+
+            .tagline {
+                font-size: 0.9rem;
+                margin-bottom: 8px;
+            }
+
+            .loading-dots {
+                margin-top: 20px;
+                gap: 6px;
+            }
+
+            .dot {
+                width: 10px;
+                height: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <p>Signing you in…</p>
+     <div class="splash-container">
+        <div class="logo-box">
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+        </div>
+        
+        <h1 class="app-name">Contract Mitra</h1>
+        <p class="tagline">Smart Legal Document Management</p>
+        <p class="tagline">version 1.0.0</p>
+
+        <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
 
   <script>
     // Supabase URL hash me access_token bhejta hai; ye handle karega
     async function run() {
       try {
+        console.log('🔐 Processing authentication callback...');
+        
         // Session pick (detectSessionInUrl:true already enabled in your config)
         const { data: { user }, error } = await window.supabase.auth.getUser();
-        if (error) console.warn(error);
-
-        // (optional) tumhara save function agar available hai:
-        if (user && typeof saveGoogleUserToDatabase === "function") {
-          try { await saveGoogleUserToDatabase(user); } catch(e) {}
+        
+        if (error) {
+          console.error('❌ Auth error:', error);
+          throw error;
         }
 
-        // ✅ final redirect to dashboard
-        window.location.replace(window.location.origin + "/dashboard");
+        if (!user) {
+          console.warn('⚠️ No user found, redirecting to login...');
+          window.location.replace(window.location.origin + "/login");
+          return;
+        }
+
+        console.log('✅ User authenticated:', user.email);
+
+        // (optional) tumhara save function agar available hai:
+        if (typeof saveGoogleUserToDatabase === "function") {
+          try { 
+            console.log('💾 Saving user to database...');
+            await saveGoogleUserToDatabase(user); 
+          } catch(e) {
+            console.warn('⚠️ Database save error:', e);
+          }
+        }
+
+        // ✅ Wait for at least 5 seconds before redirecting to dashboard
+        setTimeout(() => {
+          console.log('🚀 Redirecting to dashboard...');
+          window.location.replace(window.location.origin + "/dashboard");
+        }, 5000); // 5 seconds
+      
         // agar tumhari file /Dashboard/index.html path par hai:
         // window.location.replace(window.location.origin + "/Dashboard/index.html");
       } catch (e) {
-        console.error(e);
-        // fallback
-        window.location.replace(window.location.origin + "/login");
+        console.error('❌ Callback error:', e);
+        // fallback - redirect to login after 2 seconds
+        setTimeout(() => {
+          window.location.replace(window.location.origin + "/login");
+        }, 2000);
       }
     }
+    
+    // Run immediately but delay redirect
     run();
   </script>
 </body>
