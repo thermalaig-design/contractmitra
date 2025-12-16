@@ -61,9 +61,13 @@ app.use('/api/profile', profileRoutes);
 // ✅ NEW: Terms & Conditions Route
 
 
-// Login page (jahan Google button hai)
-app.get('/login', (req, res) => {
-  res.render('login'); // views/login.ejs
+
+router.get('/login', (req, res) => {
+    res.render('login', {
+        title: 'Login - ContractMitra',
+        // SEO data
+        description: 'Login to ContractMitra - Professional contract management platform',
+    });
 });
 
 // OAuth callback page (Google/Supabase se wapas aane ke baad)
