@@ -62,7 +62,7 @@ app.use('/api/profile', profileRoutes);
 
 
 
-router.get('/login', (req, res) => {
+app.get('/login', (req, res) => {
     res.render('login', {
         title: 'Login - ContractMitra',
         // SEO data
