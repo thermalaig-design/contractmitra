@@ -185,6 +185,11 @@ function showSidebarTab(tab) {
     }
 }
 
+// Expose to global scope for inline onclick handlers
+window.showSidebarTab = showSidebarTab;
+window.toggleSidebar = toggleSidebar;
+window.closeChatSidebar = closeChatSidebar;
+
 // ===== Debug Helper (Remove in production) =====
 window.debugOverlay = function() {
     const overlay = document.getElementById('sidebarOverlay');
@@ -223,7 +228,6 @@ let chatHistoryList = [];
 let isSidebarCollapsed = false;
 let preferredSidebarCollapsed = false;
 // ==================== SUPABASE CONNECTION ====================
-let supabase = null;
 let supabaseAccessToken = null;
 
 function formatDocumentCount(count = 0) {
@@ -257,7 +261,6 @@ async function waitForSupabase() {
         attempts++;
     }
     if (!window.supabase) throw new Error('Supabase not loaded');
-    supabase = window.supabase;
     console.log('✅ Supabase loaded in chatbot');
 }
 
@@ -271,7 +274,7 @@ async function checkAuth() {
             const userData = JSON.parse(localUser);
             currentUser = userData;
             // Try to refresh/access session to get a valid access token
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await window.supabase.auth.getSession();
             if (session?.access_token) {
                 supabaseAccessToken = session.access_token;
                 localStorage.setItem('cm_token', supabaseAccessToken);
@@ -311,7 +314,7 @@ async function checkAuth() {
             return true;
         }
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await window.supabase.auth.getSession();
         if (!session || !session.user) {
             console.log('No session - redirecting to login');
             window.location.href = '/login';
@@ -1764,40 +1767,9 @@ function toggleChatSidebar() {
 
 
 
-// Toggle main left sidebar (navigation)
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    
-    if (sidebar) {
-        sidebar.classList.toggle('active');
-        
-        // Prevent body scroll when sidebar is open
-        if (sidebar.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-    }
-    
-    if (overlay) {
-        overlay.classList.toggle('active');
-    }
-}
 
-// Close chat sidebar function (for backward compatibility)
-function closeChatSidebar() {
-    const chatSidebar = document.getElementById('chatSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    
-    if (chatSidebar) {
-        chatSidebar.classList.remove('open');
-    }
-    if (overlay) {
-        overlay.classList.remove('active');
-    }
-    document.body.style.overflow = '';
-}
+
+
 
 function toggleSidebarCollapse() {
     preferredSidebarCollapsed = !preferredSidebarCollapsed;
@@ -1892,8 +1864,8 @@ async function handleLogout(event) {
     event.preventDefault();
     
     try {
-        if (supabase) {
-            await supabase.auth.signOut();
+        if (window.supabase) {
+            await window.supabase.auth.signOut();
         }
         localStorage.removeItem('cm_user');
         window.location.href = '/login';
@@ -2371,25 +2343,7 @@ document.addEventListener('click', function(event) {
 
 console.log('✅ Enhanced AI Chatbot loaded with Qdrant document integration');
 
-// ==================== SIDEBAR TAB SWITCHER ====================
-function showSidebarTab(tab) {
-    const quick = document.getElementById('quickActionsSection');
-    const history = document.getElementById('chatHistorySection');
-    const tHistory = document.getElementById('tabHistory');
-    const tQuick = document.getElementById('tabQuick');
-    if (!quick || !history) return;
-    if (tab === 'quick') {
-        quick.style.display = '';
-        history.style.display = 'none';
-        if (tQuick) tQuick.style.background = '#eff6ff';
-        if (tHistory) tHistory.style.background = '#fff';
-    } else {
-        history.style.display = '';
-        quick.style.display = 'none';
-        if (tHistory) tHistory.style.background = '#eff6ff';
-        if (tQuick) tQuick.style.background = '#fff';
-    }
-}
+
 /* ==================== MOBILE DROPDOWN HANDLER ==================== */
 function handleMobileDropdownChange(value) {
     const dropdown = document.getElementById('mobileChatDropdown');
@@ -2444,20 +2398,7 @@ function toggleChatSidebar() {
     }
 }
 
-/* ==================== CLOSE CHAT SIDEBAR ==================== */
-function closeChatSidebar() {
-    const chatSidebar = document.getElementById('chatSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const body = document.body;
-    
-    if (chatSidebar) chatSidebar.classList.remove('active');
-    if (overlay) overlay.classList.remove('active');
-    
-    body.classList.remove('sidebar-open');
-    body.style.overflow = '';
-    body.style.position = '';
-    body.style.width = '';
-}
+
 
 /* ==================== AUTO-CLOSE ON WINDOW RESIZE ==================== */
 window.addEventListener('resize', function() {
@@ -2522,74 +2463,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', ensureMobileSidebarClosed);
 })();
 
-/* ==================== MAIN SIDEBAR TOGGLE (LEFT NAVIGATION) ==================== */
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    
-    if (!sidebar) return;
-    
-    const isActive = sidebar.classList.contains('active');
-    
-    if (isActive) {
-        // Close sidebar
-        sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
-    } else {
-        // Open sidebar
-        sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
-    }
-}
 
-/* ==================== SHOW SIDEBAR TAB ==================== */
-function showSidebarTab(tab) {
-    const historyTab = document.getElementById('tabHistory');
-    const quickTab = document.getElementById('tabQuick');
-    const historySection = document.getElementById('chatHistorySection');
-    const quickSection = document.getElementById('quickActionsSection');
-    
-    if (tab === 'history') {
-        // Show history tab
-        if (historyTab) {
-            historyTab.classList.add('active');
-            historyTab.style.background = '#eff6ff';
-            historyTab.style.borderColor = '#3b82f6';
-            historyTab.style.color = '#1e40af';
-        }
-        if (quickTab) {
-            quickTab.classList.remove('active');
-            quickTab.style.background = '#fff';
-            quickTab.style.borderColor = '#e5e7eb';
-            quickTab.style.color = '#374151';
-        }
-        if (historySection) historySection.style.display = 'flex';
-        if (quickSection) quickSection.style.display = 'none';
-        
-    } else if (tab === 'quick') {
-        // Show quick actions tab
-        if (quickTab) {
-            quickTab.classList.add('active');
-            quickTab.style.background = '#eff6ff';
-            quickTab.style.borderColor = '#3b82f6';
-            quickTab.style.color = '#1e40af';
-        }
-        if (historyTab) {
-            historyTab.classList.remove('active');
-            historyTab.style.background = '#fff';
-            historyTab.style.borderColor = '#e5e7eb';
-            historyTab.style.color = '#374151';
-        }
-        if (quickSection) quickSection.style.display = 'block';
-        if (historySection) historySection.style.display = 'none';
-    }
-}
+
+
 
 /* ==================== DEBUG HELPER (REMOVE IN PRODUCTION) ==================== */
 window.debugMobileSidebar = function() {
