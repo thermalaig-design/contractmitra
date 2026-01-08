@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing & Plans - Contract Mitra</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/settings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+    <script src="/js/theme.js" defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .billing-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Current Plan Banner */
+        .current-plan-banner {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .current-plan-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .plan-info h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #f8fafc;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .no-plan-badge {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-info p {
+            color: #94a3b8;
+            font-size: 16px;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upgrade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Usage Stats Grid */
+        .usage-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .usage-stat-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .usage-stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #3b82f6;
+            margin-bottom: 8px;
+        }
+
+        .usage-stat-label {
+            font-size: 14px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            margin-top: 60px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: 42px;
+            font-weight: 800;
+            color: #f8fafc;
+            margin-bottom: 12px;
+        }
+
+        .section-header p {
+            font-size: 18px;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Pricing Grid */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 1200px) {
+            .pricing-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+        }
+
+        /* Pricing Cards */
+        .pricing-card {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            border-color: #3b82f6;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .pricing-card.popular {
+            border: 2px solid #3b82f6;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e293b 100%);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plan-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+        }
+
+        .plan-price {
+            margin-bottom: 30px;
+        }
+
+        .price-currency {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f8fafc;
+            vertical-align: top;
+        }
+
+        .price-value {
+            font-size: 64px;
+            font-weight: 900;
+            color: #f8fafc;
+            line-height: 1;
+        }
+
+        .price-period {
+            font-size: 18px;
+            color: #64748b;
+            display: block;
+            margin-top: 8px;
+        }
+
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 40px 0;
+            flex-grow: 1;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            font-size: 16px;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-item i {
+            color: #10b981;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .select-plan-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            text-align: center;
+        }
+
+        .btn-starter {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-starter:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-growth {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-growth:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-enterprise {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .btn-enterprise:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            margin-top: 80px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .faq-grid {
+            display: grid;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .faq-item {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .faq-item:hover {
+            border-color: #3b82f6;
+        }
+
+        .faq-question {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .faq-answer {
+            font-size: 15px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .billing-footer {
+            margin-top: 80px;
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .billing-footer p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #3b82f6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .billing-container {
+                padding: 20px 15px;
+            }
+
+            .current-plan-banner {
+                padding: 24px;
+            }
+
+            .plan-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .plan-info h2 {
+                font-size: 22px;
+            }
+
+            .section-header h2 {
+                font-size: 32px;
+            }
+
+            .price-value {
+                font-size: 48px;
+            }
+        }
+        
+        /* Additional styles to match dashboard layout */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-height, 60px);
+            background: var(--nav-bg, #1e293b);
+            border-bottom: 1px solid var(--border-color, #334155);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-left, .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .nav-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: var(--nav-height, 60px);
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width, 260px);
+            background: var(--sidebar-bg, #0f172a);
+            border-right: 1px solid var(--border-color, #334155);
+            z-index: 900;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-top: calc(var(--nav-height, 60px));
+            margin-left: var(--sidebar-width, 260px);
+            padding: 30px;
+            min-height: calc(100vh - var(--nav-height, 60px));
+            transition: margin-left 0.3s ease;
+        }
+        
+        .user-dropdown-menu.show {
+            display: block;
+        }
+        
+        .sidebar-dropdown-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .sidebar-dropdown.active .sidebar-dropdown-menu {
+            max-height: 300px;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid var(--border-color, #334155);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .top-nav {
+                padding: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-left">
+            <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <!-- Credit Display Badge (NEW) -->
+        <div class="nav-center">
+            <a href="/settings/billing" class="credit-badge" id="headerCreditBadge" title="View billing details">
+                <i class="fa-solid fa-coins"></i>
+                <span style="font-weight: 700;">Loading...</span>
+            </a>
+        </div>
+           
+        <div class="nav-right">
+            <button class="notification-btn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </button>
+            
+            <!-- User Menu -->
+            <div class="user-menu">
+                <button class="user-dropdown" onclick="toggleUserMenu()">
+                    <div class="user-avatar-sm" id="userAvatarNav">U</div>
+                    <i class="fas fa-chevron-down" style="font-size: 10px; color: var(--text-muted);"></i>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div class="user-dropdown-menu" id="userDropdownMenu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatarDropdown">U</div>
+                        <div class="user-details">
+                            <div class="user-name" id="userFullName">User Name</div>
+                            <div class="user-email" id="userEmail">user@example.com</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Credit Info in Dropdown (NEW) -->
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-credits">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px;">
+                            <span style="color: #64748b; font-size: 12px; font-weight: 600;">Credits</span>
+                            <span style="color: #10b981; font-weight: 700; font-size: 14px;" id="dropdownCredits">0</span>
+                        </div>
+                        <div style="padding: 0 12px 8px;">
+                            <div style="height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden;">
+                                <div id="dropdownCreditBar" style="height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: 0%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dropdown-divider"></div>
+                    <a href="/settings/profile" class="dropdown-item">
+                        <i class="fas fa-user-circle"></i> <span>My Profile</span>
+                    </a>
+                    <a href="/settings/billing" class="dropdown-item">
+                        <i class="fas fa-credit-card"></i> <span>Billing & Credits</span>
+                    </a>
+                    <a href="/settings/notifications" class="dropdown-item">
+                        <i class="fas fa-bell"></i> <span>Notifications</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item logout-item" onclick="handleLogout(event)">
+                        <i class="fas fa-sign-out-alt"></i> <span>Log Out</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="/images/logo.png" alt="Logo">
+            <h1>Contract Mitra</h1>
+        </div>
+
+        <div class="sidebar-nav">
+            <a href="/" class="sidebar-item">
+                <div class="icon-box">
+                    <i class="fas fa-house-chimney"></i>
+                </div>
+                <span class="sidebar-text">Dashboard</span>
+            </a>
+            <a href="/project" class="sidebar-item">
+                <div class="icon-box">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <span class="sidebar-text">Projects</span>
+            </a>
+            <a href="/document" class="sidebar-item">
+                <div class="icon-box">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <span class="sidebar-text">Documents</span>
+            </a>
+            <a href="/chat" class="sidebar-item">
+                <div class="icon-box">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <span class="sidebar-text">Chat</span>
+            </a>
+
+            <div class="sidebar-dropdown">
+                <div class="sidebar-item sidebar-dropdown-toggle" onclick="toggleSidebarDropdown(event)">
+                    <div class="icon-box">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <span class="sidebar-text">Settings</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="/settings/profile" class="sidebar-sub-item">
+                        <i class="fas fa-user"></i> <span>Profile</span>
+                    </a>
+                    <a href="/settings/notifications" class="sidebar-sub-item">
+                        <i class="fas fa-bell"></i> <span>Notifications</span>
+                    </a>
+                    <a href="/settings/billing" class="sidebar-sub-item active">
+                        <i class="fas fa-credit-card"></i> <span>Billing</span>
+                    </a>
+                    <a href="/settings/privacy" class="sidebar-sub-item">
+                        <i class="fas fa-shield-halved"></i> <span>Privacy</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+            <a href="/settings/profile" class="sidebar-footer-link" title="Profile">
+                <i class="fas fa-user"></i>
+                <span class="sidebar-text">Profile</span>
+            </a>
+            <a href="#" class="sidebar-footer-link logout-item" onclick="handleLogout(event)" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="sidebar-text">Logout</span>
+            </a>
+        </div>
+    </nav>
+
+    <div id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="billing-container">
+            <!-- Current Plan Banner -->
+            <div class="current-plan-banner">
+                <div class="plan-header">
+                    <div class="plan-info">
+                        <h2>
+                            <span id="currentPlanName">No Active Plan</span>
+                            <span class="no-plan-badge" id="planBadge">FREE TIER</span>
+                        </h2>
+                        <p id="planDescription">Start with our free tier - 2 Projects & 5 GB Storage</p>
+                    </div>
+                    <button class="upgrade-btn" onclick="scrollToPricing()">
+                        <i class="fas fa-rocket"></i>
+                        <span>Upgrade Plan</span>
+                    </button>
+                </div>
+
+                <!-- Usage Stats -->
+                <div class="usage-stats-grid">
+                    <div class="usage-stat-card">
+                        <div class="usage-stat-value" id="projectsUsed">0/2</div>
+                        <div class="usage-stat-label">Projects</div>
+                    </div>
+                    <div class="usage-stat-card">
+                        <div class="usage-stat-value" id="storageUsed">0/5 GB</div>
+                        <div class="usage-stat-label">Storage Used</div>
+                    </div>
+                    <div class="usage-stat-card">
+                        <div class="usage-stat-value" id="documentsCount">0</div>
+                        <div class="usage-stat-label">Documents</div>
+                    </div>
+                    <div class="usage-stat-card">
+                        <div class="usage-stat-value" id="daysRemaining">30</div>
+                        <div class="usage-stat-label">Days Remaining</div>
+                    </div>
+                    <div class="usage-stat-card">
+                        <div class="usage-stat-value" id="creditsUsed">0/0</div>
+                        <div class="usage-stat-label">Credits Used</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Section -->
+            <div class="pricing-section" id="pricingSection">
+                <div class="section-header">
+                    <h2>Choose Your Plan</h2>
+                    <p>Upgrade to unlock unlimited projects and more storage for your legal documents</p>
+                </div>
+
+                <div class="pricing-grid">
+                    <!-- Starter Plan -->
+                    <div class="pricing-card">
+                        <div class="plan-name">STARTER</div>
+                        <div class="plan-price">
+                            <span class="price-currency">₹</span>
+                            <span class="price-value">9999</span>
+                            <span class="price-period">/year</span>
+                        </div>
+                        <ul class="plan-features">
+                             <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>1000 Credits</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>10 GB Document Storage</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Unlimited Projects</span>
+                            </li>
+                           
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced Chat Features</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>AI Contract Analysis</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Priority Support</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced OCR & Extraction</span>
+                            </li>
+                        </ul>
+                        <button class="select-plan-btn btn-starter" onclick="upgradePlan('starter', 10000, 10)">
+                            Get Started
+                        </button>
+                    </div>
+
+                    <!-- Growth Plan (Most Popular) -->
+                    <div class="pricing-card popular">
+                        <div class="popular-badge">MOST POPULAR</div>
+                        <div class="plan-name">GROWTH</div>
+                        <div class="plan-price">
+                            <span class="price-currency">₹</span>
+                            <span class="price-value">24999</span>
+                            <span class="price-period">/year</span>
+                        </div>
+                        <ul class="plan-features">
+                             <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>5000 Credits</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>50 GB Document Storage</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Unlimited Projects</span>
+                            </li>
+                           
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced Chat Features</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>AI Contract Analysis</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Email Priority Support</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced OCR & Extraction</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Team Collaboration</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Custom Workflows</span>
+                            </li>
+                        </ul>
+                        <button class="select-plan-btn btn-growth" onclick="upgradePlan('growth', 25000, 50)">
+                            Upgrade Now
+                        </button>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card">
+                        <div class="plan-name">ENTERPRISE</div>
+                        <div class="plan-price">
+                            <span class="price-currency">₹</span>
+                            <span class="price-value">49999</span>
+                            <span class="price-period">/year</span>
+                        </div>
+                        <ul class="plan-features">
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>15000 Credits</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>150 GB Document Storage</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Unlimited Projects</span>
+                            </li>
+                            
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced Chat Features</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>AI Contract Analysis</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>24/7 Premium Support</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced OCR & Extraction</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Team Collaboration</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Custom Integrations</span>
+                            </li>
+                            <li class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Dedicated Account Manager</span>
+                            </li>
+                        </ul>
+                        <button class="select-plan-btn btn-enterprise" onclick="upgradePlan('enterprise', 50000, 150)">
+                            Contact Sales
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="faq-section">
+                <div class="section-header">
+                    <h2>Frequently Asked Questions</h2>
+                </div>
+                <div class="faq-grid">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle" style="color: #3b82f6;"></i>
+                            <span>Can I upgrade or downgrade my plan anytime?</span>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, you can upgrade your plan at any time. The price difference will be prorated for the remaining billing period.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle" style="color: #3b82f6;"></i>
+                            <span>What happens when I reach my storage limit?</span>
+                        </div>
+                        <div class="faq-answer">
+                            You'll receive a notification when you reach 90% of your storage. Once the limit is reached, you'll need to upgrade your plan or delete old documents.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle" style="color: #3b82f6;"></i>
+                            <span>What payment methods do you accept?</span>
+                        </div>
+                        <div class="faq-answer">
+                            We accept all major credit/debit cards, UPI, net banking, and digital wallets through our secure payment gateway (Razorpay).
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle" style="color: #3b82f6;"></i>
+                            <span>Is there a refund policy?</span>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, we offer a 30-day money-back guarantee. If you're not satisfied with our service, contact support within 30 days of purchase for a full refund.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="billing-footer">
+                <p>Need help choosing a plan? Contact our sales team at <strong>sales@contractmitra.com</strong></p>
+                <div class="footer-links">
+                    <a href="/terms">Terms of Service</a>
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/contact">Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Functions needed for the sidebar and navigation
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+        
+        function toggleUserMenu() {
+            const menu = document.getElementById('userDropdownMenu');
+            menu.classList.toggle('show');
+        }
+        
+        function toggleSidebarDropdown(event) {
+            event.preventDefault();
+            const dropdown = event.currentTarget.closest('.sidebar-dropdown');
+            dropdown.classList.toggle('active');
+        }
+        
+        function handleLogout(event) {
+            event.preventDefault();
+            // Call the logout function from settings.js
+            logout();
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const userDropdown = document.getElementById('userDropdownMenu');
+            const userButton = document.querySelector('.user-dropdown');
+            
+            if (userDropdown && !userDropdown.contains(event.target) && !userButton.contains(event.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+        
+        // Function to scroll to pricing section
+        function scrollToPricing() {
+            document.getElementById('pricingSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Function to upgrade plan
+        function upgradePlan(planType, amount, storage) {
+            // This function is already defined in settings.js
+            // Call the function from settings.js
+            window.upgradePlan(planType, amount, storage);
+        }
+    </script>
+    <script src="/js/settings.js"></script>
+</body>
+</html>
